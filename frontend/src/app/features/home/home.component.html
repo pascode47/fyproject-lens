@@ -1,0 +1,67 @@
+<!-- home.component.html -->
+<div class="home-container">
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+      <h1>Welcome to FYProject Lens</h1>
+      <p>Explore existing projects, check similarities, and get intelligent recommendations for your Final Year Project</p>
+    </section>
+  
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+      <div class="action-card" [routerLink]="['/project/upload']">
+        <div class="icon">📄</div>
+        <h3>Upload Project</h3>
+        <p>Check similarity with existing projects</p>
+      </div>
+  
+      <div class="action-card" [routerLink]="['/project/list']">
+        <div class="icon">📚</div>
+        <h3>Browse Projects</h3>
+        <p>View all existing FYP projects</p>
+      </div>
+  
+      <div class="action-card" [routerLink]="['/recommendations']">
+        <div class="icon">💡</div>
+        <h3>Get Recommendations</h3>
+        <p>Discover project ideas</p>
+      </div>
+    </section>
+  
+    <!-- Statistics Section -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <h4>Total Projects</h4>
+        <div class="stat-value">{{statistics.totalProjects}}</div>
+      </div>
+  
+      <div class="stat-card">
+        <h4>Projects This Year</h4>
+        <div class="stat-value">{{statistics.projectsThisYear}}</div>
+      </div>
+  
+      <div class="stat-card">
+        <h4>Popular Domains</h4>
+        <div class="domain-tags">
+          @for (domain of statistics.popularDomains; track domain) {
+            <span class="tag">{{domain}}</span>
+          }
+        </div>
+      </div>
+    </section>
+  
+    <!-- Recent Activity -->
+    <section class="recent-activity">
+      <h2>Recent Activity</h2>
+      <div class="activity-list">
+        @for (activity of recentActivities; track activity.id) {
+          <div class="activity-item">
+            <div class="activity-icon">{{activity.icon}}</div>
+            <div class="activity-details">
+              <p class="activity-text">{{activity.description}}</p>
+              <span class="activity-time">{{activity.time}}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  </div>

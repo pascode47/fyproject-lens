@@ -1,0 +1,51 @@
+<div class="similarity-results-container">
+  <h2>Similarity Analysis Results</h2>
+  
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading similarity results...</p>
+  </div>
+  
+  <!-- Error state -->
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button class="retry-button" (click)="loadSimilarityResults(projectId!)" *ngIf="projectId">Retry</button>
+  </div>
+  
+  <!-- Results content -->
+  <div *ngIf="!isLoading && !error" class="results-content">
+    <div class="project-info">
+      <h3>{{ projectTitle }}</h3>
+      <p>Showing similarity results for this project proposal</p>
+    </div>
+    
+    <!-- No results state -->
+    <div *ngIf="similarityResults.length === 0" class="no-results">
+      <p>No similarities found. Your project appears to be unique!</p>
+    </div>
+    
+    <!-- Results grid using project-card component -->
+    <div *ngIf="similarityResults.length > 0" class="results-section">
+      <p class="results-count">Found {{ similarityResults.length }} similar projects</p>
+      
+      <div class="results-grid">
+        <div *ngFor="let result of similarityResults" class="result-card">
+          <app-project-card
+            [id]="result.projectId"
+            [title]="result.projectTitle"
+            [year]="result.year"
+            [department]="result.department"
+            [similarityPercentage]="result.similarityPercentage"
+            [tags]="result.similarSections"
+            [showSimilarity]="true">
+          </app-project-card>
+        </div>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="back-button" routerLink="/project/list">Back to Projects</button>
+    </div>
+  </div>
+</div>

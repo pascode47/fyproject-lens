@@ -1,0 +1,169 @@
+<div class="admin-container">
+  <h1>System Analytics</h1>
+  
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+  
+  <div *ngIf="isLoading" class="loading-spinner">
+    Loading system metrics...
+  </div>
+  
+  <div *ngIf="!isLoading && metrics" class="analytics-content">
+    <!-- User Statistics -->
+    <div class="analytics-card">
+      <h2>User Statistics</h2>
+      
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.userStats.totalUsers }}</div>
+          <div class="metric-label">Total Users</div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.userStats.activeUsers }}</div>
+          <div class="metric-label">Active Users</div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.userStats.suspendedUsers }}</div>
+          <div class="metric-label">Suspended Users</div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.userStats.newUsersThisMonth }}</div>
+          <div class="metric-label">New Users This Month</div>
+        </div>
+      </div>
+      
+      <div class="progress-bar-container">
+        <div class="progress-label">
+          <span>Active Users</span>
+          <span>{{ calculatePercentage(metrics.userStats.activeUsers, metrics.userStats.totalUsers) }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div 
+            class="progress-bar-fill" 
+            [style.width.%]="calculatePercentage(metrics.userStats.activeUsers, metrics.userStats.totalUsers)"
+            style="background-color: #28a745;"
+          ></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Project Statistics -->
+    <div class="analytics-card">
+      <h2>Project Statistics</h2>
+      
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.projectStats.totalProjects }}</div>
+          <div class="metric-label">Total Projects</div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.projectStats.projectsThisYear }}</div>
+          <div class="metric-label">Projects This Year</div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.projectStats.averageSimilarity }}%</div>
+          <div class="metric-label">Average Similarity</div>
+        </div>
+      </div>
+      
+      <h3>Top Departments</h3>
+      <div class="bar-chart">
+        <div *ngFor="let dept of metrics.projectStats.topDepartments" class="bar-chart-item">
+          <div class="bar-label">{{ dept.name }}</div>
+          <div class="bar-container">
+            <div 
+              class="bar-fill" 
+              [style.width.%]="calculatePercentage(dept.count, metrics.projectStats.totalProjects)"
+            ></div>
+            <div class="bar-value">{{ dept.count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analysis Statistics -->
+    <div class="analytics-card">
+      <h2>Analysis Statistics</h2>
+      
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.analysisStats.totalAnalyses }}</div>
+          <div class="metric-label">Total Analyses</div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-value">{{ metrics.analysisStats.analysesThisMonth }}</div>
+          <div class="metric-label">Analyses This Month</div>
+        </div>
+      </div>
+      
+      <h3>Similarity Distribution</h3>
+      <div class="pie-chart-container">
+        <div class="pie-chart-legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #dc3545;"></div>
+            <div class="legend-label">High Similarity ({{ metrics.analysisStats.highSimilarityCount }})</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #ffc107;"></div>
+            <div class="legend-label">Medium Similarity ({{ metrics.analysisStats.mediumSimilarityCount }})</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #28a745;"></div>
+            <div class="legend-label">Low Similarity ({{ metrics.analysisStats.lowSimilarityCount }})</div>
+          </div>
+        </div>
+        
+        <div class="similarity-bars">
+          <div class="similarity-bar-container">
+            <div class="similarity-bar-label">High</div>
+            <div class="similarity-bar">
+              <div 
+                class="similarity-bar-fill" 
+                style="background-color: #dc3545;"
+                [style.width.%]="calculatePercentage(metrics.analysisStats.highSimilarityCount, metrics.analysisStats.totalAnalyses)"
+              ></div>
+            </div>
+            <div class="similarity-bar-value">
+              {{ calculatePercentage(metrics.analysisStats.highSimilarityCount, metrics.analysisStats.totalAnalyses) }}%
+            </div>
+          </div>
+          
+          <div class="similarity-bar-container">
+            <div class="similarity-bar-label">Medium</div>
+            <div class="similarity-bar">
+              <div 
+                class="similarity-bar-fill" 
+                style="background-color: #ffc107;"
+                [style.width.%]="calculatePercentage(metrics.analysisStats.mediumSimilarityCount, metrics.analysisStats.totalAnalyses)"
+              ></div>
+            </div>
+            <div class="similarity-bar-value">
+              {{ calculatePercentage(metrics.analysisStats.mediumSimilarityCount, metrics.analysisStats.totalAnalyses) }}%
+            </div>
+          </div>
+          
+          <div class="similarity-bar-container">
+            <div class="similarity-bar-label">Low</div>
+            <div class="similarity-bar">
+              <div 
+                class="similarity-bar-fill" 
+                style="background-color: #28a745;"
+                [style.width.%]="calculatePercentage(metrics.analysisStats.lowSimilarityCount, metrics.analysisStats.totalAnalyses)"
+              ></div>
+            </div>
+            <div class="similarity-bar-value">
+              {{ calculatePercentage(metrics.analysisStats.lowSimilarityCount, metrics.analysisStats.totalAnalyses) }}%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

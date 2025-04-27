@@ -1,0 +1,39 @@
+<div class="project-card">
+  <div class="card-header">
+    <h3 class="project-title">{{ title }}</h3>
+    
+    <!-- Similarity badge (shown only when showSimilarity is true) -->
+    <div *ngIf="showSimilarity && similarityPercentage !== undefined" 
+         class="similarity-badge" 
+         [ngClass]="getSimilarityClass()">
+      {{ similarityPercentage }}%
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <div class="project-meta">
+      <div class="meta-item">
+        <span class="meta-label">Year:</span>
+        <span class="meta-value">{{ year }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Department:</span>
+        <span class="meta-value">{{ department }}</span>
+      </div>
+    </div>
+    
+    <p *ngIf="description" class="project-description">
+      {{ description }}
+    </p>
+    
+    <div *ngIf="tags && tags.length > 0" class="project-tags">
+      <span *ngFor="let tag of tags" class="tag">{{ tag }}</span>
+    </div>
+  </div>
+  
+  <div class="card-footer">
+    <a [routerLink]="['/project/similarity', id]" class="view-button">
+      View Details
+    </a>
+  </div>
+</div>

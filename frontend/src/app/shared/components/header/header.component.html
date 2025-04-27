@@ -1,0 +1,76 @@
+<!-- header.component.html -->
+<header class="header">
+  <div class="header-content">
+    <!-- Mobile Menu Toggle (visible only on mobile) -->
+    <button class="mobile-toggle" (click)="toggleMobileMenu()">
+      @if (isMobileMenuOpen) {
+        <span class="toggle-icon">✕</span>
+      } @else {
+        <span class="toggle-icon">☰</span>
+      }
+    </button>
+
+    <!-- Page Title -->
+    <h1 class="page-title">{{ getCurrentPageTitle() }}</h1>
+
+    <!-- Right Side Actions -->
+    <div class="header-actions">
+      <!-- Search Bar -->
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search projects...">
+        <button class="search-button">🔍</button>
+      </div>
+
+      <!-- Notification Icon -->
+      <button class="action-button notification-button">
+        <span class="action-icon">🔔</span>
+        <span class="notification-badge">3</span>
+      </button>
+
+      <!-- User Menu -->
+      <div class="user-menu">
+        <button class="user-button" (click)="toggleUserMenu()">
+          <span class="user-avatar">👤</span>
+        </button>
+        @if (isUserMenuOpen) {
+          <div class="user-dropdown">
+            <div class="dropdown-header">
+              <span class="user-name">Student</span>
+              <span class="user-email">student&#64;example.com</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <span class="item-icon">👤</span>
+              <span class="item-text">Profile</span>
+            </a>
+            <a href="#" class="dropdown-item">
+              <span class="item-icon">⚙️</span>
+              <span class="item-text">Settings</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item">
+              <span class="item-icon">🚪</span>
+              <span class="item-text">Logout</span>
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu (visible only when toggled) -->
+  @if (isMobileMenuOpen) {
+    <div class="mobile-menu">
+      @for (item of menuItems; track item.path) {
+        <a 
+          [routerLink]="[item.path]"
+          routerLinkActive="active"
+          class="mobile-link"
+          (click)="toggleMobileMenu()">
+          <span class="nav-icon">{{item.icon}}</span>
+          <span class="nav-label">{{item.label}}</span>
+        </a>
+      }
+    </div>
+  }
+</header>

@@ -1,0 +1,27 @@
+<div class="file-upload-container">
+  <div class="file-input-wrapper">
+    <input 
+      type="file" 
+      id="file-upload" 
+      [accept]="accept" 
+      (change)="onFileChange($event)" 
+      class="file-input"
+    >
+    <label for="file-upload" class="file-label">
+      <span class="file-icon">📎</span>
+      <span class="file-text">
+        <ng-container *ngIf="!file">{{ label }}</ng-container>
+        <ng-container *ngIf="file">{{ file.name }}</ng-container>
+      </span>
+    </label>
+  </div>
+  
+  <div *ngIf="file" class="file-info">
+    <span class="file-size">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</span>
+    <button type="button" class="clear-button" (click)="clearFile()">✕</button>
+  </div>
+  
+  <div *ngIf="error" class="file-error">
+    {{ error }}
+  </div>
+</div>

@@ -1,0 +1,36 @@
+/* app.component.css */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-normal) ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-collapsed .main-content {
+  margin-left: 70px;
+}
+
+.content-container {
+  flex: 1;
+  padding: var(--spacing-4);
+  background-color: var(--gray-100);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
+}

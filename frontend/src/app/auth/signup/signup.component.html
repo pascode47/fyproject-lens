@@ -1,0 +1,102 @@
+<div class="signup-container">
+  <div class="signup-card">
+    <h2>Create an Account</h2>
+    
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+    
+    <form (ngSubmit)="signup()">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          [(ngModel)]="name" 
+          required 
+          placeholder="Enter your full name"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          [(ngModel)]="email" 
+          required 
+          placeholder="Enter your email"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label for="registrationNo">Registration Number</label>
+        <input 
+          type="text" 
+          id="registrationNo" 
+          name="registrationNo" 
+          [(ngModel)]="registrationNo" 
+          required 
+          placeholder="Format: TXX-XX-XXXXX"
+        >
+        <small class="form-hint">Example: T20-12-12345</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="programme">Programme</label>
+        <select 
+          id="programme" 
+          name="programme" 
+          [(ngModel)]="selectedProgramme" 
+          required
+        >
+          <option value="" disabled selected>Select your programme</option>
+          <optgroup *ngFor="let discipline of programmes | keyvalue" [label]="discipline.key">
+            <option *ngFor="let programme of discipline.value" [value]="programme.abbreviation" [title]="programme.fullName">
+              {{ programme.abbreviation }} - {{ programme.fullName }}
+            </option>
+          </optgroup>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          [(ngModel)]="password" 
+          required 
+          placeholder="Enter your password"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input 
+          type="password" 
+          id="confirmPassword" 
+          name="confirmPassword" 
+          [(ngModel)]="confirmPassword" 
+          required 
+          placeholder="Confirm your password"
+        >
+      </div>
+      
+      <button 
+        type="submit" 
+        [disabled]="isLoading" 
+        class="signup-button"
+      >
+        <span *ngIf="isLoading">Creating account...</span>
+        <span *ngIf="!isLoading">Create Account</span>
+      </button>
+    </form>
+    
+    <div class="login-link">
+      Already have an account? <a routerLink="/auth/login">Log in</a>
+    </div>
+  </div>
+</div>

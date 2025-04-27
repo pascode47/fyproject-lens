@@ -1,0 +1,144 @@
+<div class="profile-container">
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+  
+  <div *ngIf="user" class="profile-content">
+    <div class="profile-header">
+      <h1>User Profile</h1>
+      <div class="user-info">
+        <div class="info-item">
+          <span class="label">Name:</span>
+          <span class="value">{{ user.name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Email:</span>
+          <span class="value">{{ user.email }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Registration No:</span>
+          <span class="value">{{ user.registrationNo }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Programme:</span>
+          <span class="value">{{ user.programme }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="profile-section">
+      <h2>Change Password</h2>
+      <div *ngIf="passwordChangeSuccess" class="success-message">
+        Password changed successfully!
+      </div>
+      <div *ngIf="passwordChangeError" class="error-message">
+        {{ passwordChangeError }}
+      </div>
+      
+      <form (ngSubmit)="changePassword()" class="password-form">
+        <div class="form-group">
+          <label for="currentPassword">Current Password</label>
+          <input 
+            type="password" 
+            id="currentPassword" 
+            name="currentPassword" 
+            [(ngModel)]="currentPassword" 
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input 
+            type="password" 
+            id="newPassword" 
+            name="newPassword" 
+            [(ngModel)]="newPassword" 
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            [(ngModel)]="confirmPassword" 
+            required
+          >
+        </div>
+        
+        <button type="submit" class="btn-primary">Change Password</button>
+      </form>
+    </div>
+    
+    <div class="profile-section">
+      <h2>Analysis History</h2>
+      
+      <div class="filter-controls">
+        <div class="date-filters">
+          <div class="form-group">
+            <label for="startDate">From</label>
+            <input 
+              type="date" 
+              id="startDate" 
+              name="startDate" 
+              [(ngModel)]="startDate"
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="endDate">To</label>
+            <input 
+              type="date" 
+              id="endDate" 
+              name="endDate" 
+              [(ngModel)]="endDate"
+            >
+          </div>
+          
+          <button (click)="applyDateFilter()" class="btn-secondary">Apply Filter</button>
+          <button (click)="clearDateFilter()" class="btn-secondary">Clear</button>
+        </div>
+      </div>
+      
+      <div *ngIf="isLoading" class="loading-spinner">
+        Loading...
+      </div>
+      
+      <div *ngIf="!isLoading && analyses.length === 0" class="no-data">
+        No analysis history found.
+      </div>
+      
+      <div *ngIf="!isLoading && analyses.length > 0" class="analysis-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Project ID</th>
+              <th>Similarity %</th>
+              <th>Recommendations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let analysis of analyses">
+              <td>{{ analysis.timestamp | date:'medium' }}</td>
+              <td>{{ analysis.projectId }}</td>
+              <td [ngClass]="{'high-similarity': analysis.similarityPercentage >= 70, 
+                             'medium-similarity': analysis.similarityPercentage >= 40 && analysis.similarityPercentage < 70,
+                             'low-similarity': analysis.similarityPercentage < 40}">
+                {{ analysis.similarityPercentage }}%
+              </td>
+              <td>
+                <ul class="recommendations-list">
+                  <li *ngFor="let rec of analysis.recommendations">{{ rec }}</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

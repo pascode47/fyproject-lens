@@ -1,0 +1,133 @@
+<div class="admin-container">
+  <h1>Manage Users</h1>
+  
+  <div class="admin-section">
+    <h2>User Management</h2>
+    
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+    
+    <div class="filter-controls">
+      <div class="search-box">
+        <input 
+          type="search" 
+          [(ngModel)]="searchTerm" 
+          (input)="onSearchChange()" 
+          placeholder="Search by name, email, or registration number..."
+        >
+      </div>
+      
+      <div class="filter-group">
+        <label for="statusFilter">Status:</label>
+        <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()">
+          <option value="">All</option> <!-- Use empty string for 'all' -->
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="roleFilter">Role:</label>
+        <select id="roleFilter" [(ngModel)]="roleFilter" (change)="onFilterChange()">
+          <option value="">All</option> <!-- Use empty string for 'all' -->
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    
+    <div *ngIf="isLoading" class="loading-spinner">
+      Loading users... <span class="spinner"></span> <!-- Optional: Add a visual spinner -->
+    </div>
+    
+    <div *ngIf="!isLoading && users.length === 0 && !error" class="no-data"> <!-- Check users array -->
+      No users found matching the current criteria.
+    </div>
+    
+    <div *ngIf="!isLoading && users.length > 0" class="users-table"> <!-- Check users array -->
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Registration No.</th>
+            <th>Programme</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loop over users array -->
+          <tr *ngFor="let user of users" [ngClass]="{'suspended-user': user.status === 'suspended'}"> 
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.registrationNo }}</td>
+            <td>{{ getProgrammeName(user.programme) }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="user.status">
+                {{ user.status }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <!-- Call updateUserStatus for suspend -->
+              <button 
+                *ngIf="user.status === 'active'" 
+                (click)="updateUserStatus(user.id, 'suspended')" 
+                class="btn-warning"
+                title="Suspend user" 
+                [disabled]="isLoading" 
+              >
+                Suspend
+              </button>
+              
+              <!-- Call updateUserStatus for activate -->
+              <button 
+                *ngIf="user.status === 'suspended'" 
+                (click)="updateUserStatus(user.id, 'active')" 
+                class="btn-success"
+                title="Activate user" 
+                [disabled]="isLoading"
+              >
+                Activate
+              </button>
+              
+              <!-- Delete button -->
+              <button 
+                (click)="deleteUser(user.id)" 
+                class="btn-danger"
+                title="Delete user" 
+                [disabled]="isLoading"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination Controls -->
+      <div class="pagination-controls" *ngIf="!isLoading && totalItems > itemsPerPage">
+        <span>
+          Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} items)
+        </span>
+        <button 
+          (click)="onPageChange(currentPage - 1)" 
+          [disabled]="currentPage === 1"
+          class="btn-secondary"
+        >
+          Previous
+        </button>
+        <button 
+          (click)="onPageChange(currentPage + 1)" 
+          [disabled]="currentPage === totalPages"
+          class="btn-secondary"
+        >
+          Next
+        </button>
+      </div>
+    </div> <!-- End of users-table -->
+  </div>
+</div>

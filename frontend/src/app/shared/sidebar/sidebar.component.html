@@ -1,0 +1,48 @@
+<!-- sidebar.component.html -->
+<div class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="logo-icon">📚</span>
+      <span class="logo-text" *ngIf="!isCollapsed">FYProject Lens</span>
+    </div>
+    <button class="collapse-btn" (click)="toggleSidebar()">
+      <span *ngIf="!isCollapsed">◀</span>
+      <span *ngIf="isCollapsed">▶</span>
+    </button>
+  </div>
+
+  <div class="sidebar-content">
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item" *ngFor="let item of menuItems">
+          <a 
+            [routerLink]="[item.path]" 
+            routerLinkActive="active"
+            class="nav-link"
+            [title]="item.label">
+            <span class="nav-icon">{{item.icon}}</span>
+            <span class="nav-label" *ngIf="!isCollapsed">{{item.label}}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <div class="user-info" *ngIf="authService.isAuthenticated()">
+      <div class="user-avatar">👤</div>
+      <div class="user-details">
+        <div class="user-name">{{ authService.getCurrentUser()?.name || 'User' }}</div>
+        <div class="user-role">{{ authService.isAdmin() ? 'Admin' : 'Student' }}</div>
+      </div>
+    </div>
+    <div class="auth-buttons" *ngIf="!authService.isAuthenticated()">
+      <a *ngFor="let item of authMenuItems" 
+         [routerLink]="[item.path]" 
+         class="auth-link">
+        <span class="auth-icon">{{item.icon}}</span>
+        <span class="auth-label">{{item.label}}</span>
+      </a>
+    </div>
+  </div>
+</div>

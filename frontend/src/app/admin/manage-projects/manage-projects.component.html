@@ -1,0 +1,152 @@
+<div class="admin-container">
+  <h1>Manage Projects</h1>
+
+  <!-- Section for Uploading Single Project -->
+  <div class="admin-section">
+    <h2>Upload New Project</h2>
+    <p class="section-description">
+      Upload a single project document (DOCX or PDF). The system will attempt to extract relevant information.
+    </p>
+    
+    <div *ngIf="uploadSuccessMessage" class="success-message">
+      {{ uploadSuccessMessage }}
+    </div>
+    
+    <div *ngIf="uploadErrorMessage" class="error-message">
+      {{ uploadErrorMessage }}
+    </div>
+    
+    <div class="upload-form">
+      <div class="form-group">
+        <label for="projectFile">Select Project File</label>
+        <input 
+          type="file" 
+          id="projectFile" 
+          accept=".docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, .pdf, application/pdf" 
+          (change)="onProjectFileSelected($event)"
+          #projectFileInput 
+        /> <!-- Use standard self-closing syntax and remove comment -->
+        <small class="form-hint">Allowed types: DOCX, PDF. Max size: 10MB.</small>
+      </div>
+      
+      <button 
+        (click)="uploadSingleProject()" 
+        [disabled]="!selectedProjectFile || isUploading" 
+        class="btn-primary"
+      >
+        <span *ngIf="!isUploading">Upload Project</span>
+        <span *ngIf="isUploading">Uploading... <span class="spinner"></span></span>
+      </button>
+      <!-- Optional: Add progress bar if implementing progress tracking -->
+      <!-- <progress *ngIf="isUploading" [value]="uploadProgress" max="100"></progress> -->
+    </div>
+  </div>
+
+  <!-- Section for Listing and Managing Projects -->
+  <div class="admin-section">
+    <h2>Project List</h2>
+
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+
+    <!-- Filter and Search Controls -->
+    <div class="filter-controls">
+      <div class="search-box">
+        <input 
+          type="search" 
+          [(ngModel)]="searchTerm" 
+          (input)="onSearchChange()" 
+          placeholder="Search by title, department..."
+        >
+      </div>
+      
+      <div class="filter-group">
+        <label for="departmentFilter">Department:</label>
+        <input 
+          type="text" 
+          id="departmentFilter" 
+          [(ngModel)]="departmentFilter" 
+          (input)="onFilterChange()" 
+          placeholder="Filter by department"
+        > 
+        <!-- Consider using a datalist or select if departments are known -->
+      </div>
+      
+      <div class="filter-group">
+        <label for="yearFilter">Year:</label>
+        <input 
+          type="number" 
+          id="yearFilter" 
+          [(ngModel)]="yearFilter" 
+          (input)="onFilterChange()" 
+          placeholder="Filter by year"
+        >
+      </div>
+    </div>
+    
+    <div *ngIf="isLoading" class="loading-spinner">
+      Loading projects... <span class="spinner"></span>
+    </div>
+    
+    <div *ngIf="!isLoading && projects.length === 0 && !error" class="no-data">
+      No projects found matching the current criteria.
+    </div>
+    
+    <div *ngIf="!isLoading && projects.length > 0" class="projects-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Department</th>
+            <th>Year</th>
+            <th>Uploaded By</th> <!-- Assuming Project model has uploadedBy populated -->
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let project of projects">
+            <td>{{ project.title }}</td>
+            <td>{{ project.department }}</td>
+            <td>{{ project.year }}</td>
+            <!-- Use helper method to get uploader name -->
+            <td>{{ getUploaderName(project.uploadedBy) }}</td> 
+            <td class="actions-cell">
+              <!-- Add View/Download button if needed -->
+              <!-- <a [href]="project.filePath" target="_blank" class="btn-secondary">View</a> -->
+              <button 
+                (click)="deleteProject(project.id, project.title)" 
+                class="btn-danger"
+                title="Delete project"
+                [disabled]="isLoading"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination Controls -->
+      <div class="pagination-controls" *ngIf="!isLoading && totalItems > itemsPerPage">
+        <span>
+          Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} items)
+        </span>
+        <button 
+          (click)="onPageChange(currentPage - 1)" 
+          [disabled]="currentPage === 1"
+          class="btn-secondary"
+        >
+          Previous
+        </button>
+        <button 
+          (click)="onPageChange(currentPage + 1)" 
+          [disabled]="currentPage === totalPages"
+          class="btn-secondary"
+        >
+          Next
+        </button>
+      </div>
+    </div> <!-- End of projects-table -->
+  </div>
+</div>
