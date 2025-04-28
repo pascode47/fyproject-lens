@@ -13,10 +13,10 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Admin user details
 const adminDetails = {
-  name: 'Paschal admin',
-  email: 'admin@fyprojectlens.com', // Default email, can be changed
-  password: 'Godslove2755',
-  registrationNo: 'TAD-00-00000', // Format that matches TXX-XX-XXXXX pattern
+  name: 'paschal admin', // Updated name
+  email: 'pbadmin@udom.com', // Updated email
+  password: 'Godslove2755', // Using provided password
+  registrationNo: 'T00-00-00000', // Updated registration number
   role: 'admin',
   status: 'active'
 };
@@ -26,9 +26,9 @@ async function createAdminUser() {
   try {
     // Check if admin user already exists
     const existingAdmin = await User.findOne({ email: adminDetails.email });
-    
+
     if (existingAdmin) {
-      console.log('Admin user already exists with this email.');
+      console.log(`Admin user with email ${adminDetails.email} already exists.`);
       process.exit(0);
     }
     
@@ -44,6 +44,9 @@ async function createAdminUser() {
       });
       console.log('Created default programme for admin user');
     }
+
+    // Log details just before creating
+    console.log('Admin details before create:', adminDetails);
     
     // Create admin user
     const adminUser = await User.create({

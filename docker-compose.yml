@@ -1,0 +1,54 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend
+    env_file:
+      - .env # Load environment variables from .env file
+    ports:
+      - "3000:3000" # Expose backend port
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/fyprojectlensdb # Connect to mongodb service on the docker network
+      PORT: 3000
+      # Add other necessary environment variables here (e.g., JWT_SECRET)
+      # OPENAI_API_KEY will be loaded from .env file
+      JWT_SECRET: 'ThisIsARandomSecretKeyPleaseReplaceItLater123!' # <-- IMPORTANT: Replace with a strong secret key!
+      # OPENAI_API_KEY: YOUR_OPENAI_API_KEY # <-- IMPORTANT: Set this via environment variable or .env file - No longer needed here
+    volumes:
+      - ./uploads:/usr/src/app/uploads # Mount uploads directory
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "80:80" # Expose frontend Nginx port
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    # We will need to add Nginx configuration later to proxy API requests
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local

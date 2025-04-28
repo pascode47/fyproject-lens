@@ -7,15 +7,19 @@ const { response } = require('../utils');
  * @access Public
  */
 exports.getProgrammes = async (req, res, next) => {
+  console.log('Attempting to get programmes...'); // Log entry
   try {
     const programmes = await Programme.find().sort('abbreviation');
+    console.log(`Found ${programmes.length} programmes.`); // Log result count
     
+    console.log('Sending success response for getProgrammes...'); // Log before response
     return response.success(
       res,
       'Programmes retrieved successfully',
       { programmes }
     );
   } catch (error) {
+    console.error('Error in getProgrammes:', error); // Log any caught errors
     next(error);
   }
 };

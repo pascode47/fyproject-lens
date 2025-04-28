@@ -4,6 +4,16 @@ import { Observable, of, throwError, Subject } from 'rxjs';
 import { catchError, tap, delay, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { User } from '../models/user';
+import { Programme } from '../models/programme'; // Import Programme model
+
+// Define the expected structure for the backend response containing programmes
+interface ProgrammesBackendResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    programmes: Programme[];
+  };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +35,27 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       this.loadUserFromStorage();
     }
+  }
+
+  /**
+   * Fetch all available programmes from the backend
+   * @returns Observable with an array of programmes
+   */
+  getProgrammes(): Observable<Programme[]> {
+    // Always fetch real programmes from the API for the signup form
+    return this.http.get<ProgrammesBackendResponse>(`${this.apiUrl}/programmes`).pipe(
+      map(response => {
+        if (response && response.success && response.data && response.data.programmes) {
+          return response.data.programmes;
+        }
+        console.error('Invalid programmes response format:', response);
+        throw new Error('Could not load programmes.');
+      }),
+      catchError(error => {
+        console.error('Error fetching programmes:', error);
+        return throwError(() => new Error('Failed to fetch programmes from the server.'));
+      })
+    );
   }
 
   /**
@@ -105,10 +136,8 @@ export class AuthService {
    * @returns Observable with registration result
    */
   signup(user: Partial<User>): Observable<{ token: string, user: User }> {
-    // Use mock data if in production or if useMockData is set to true
-    if (environment.production || environment.useMockData) {
-      return this.getMockSignupResponse(user);
-    }
+    // Always attempt real API call unless explicitly mocking (which is handled by environment.useMockData if needed elsewhere)
+    // Removed: if (environment.production || environment.useMockData) { ... }
     
     // The backend response is wrapped in a data property
     interface BackendResponse {
@@ -144,7 +173,15 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Signup error:', error);
-          return throwError(() => new Error('Registration failed. Please try again.'));
+          // Extract specific error message from backend response
+          let errorMessage = 'Registration failed. Please try again.';
+          if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.message) {
+            // Fallback to generic error message if backend doesn't provide one
+            errorMessage = error.message;
+          }
+          return throwError(() => new Error(errorMessage));
         })
       );
   }
@@ -328,5 +365,23 @@ export class AuthService {
         this.setSession(response.token, response.user);
       })
     );
+  }
+
+  /**
+   * Get mock programmes response
+   * @returns Observable with mock programmes array
+   */
+  private getMockProgrammesResponse(): Observable<Programme[]> {
+    const mockProgrammes: Programme[] = [
+      { id: '1', abbreviation: 'BSc CS', fullName: 'Bachelor of Science in Computer Science', discipline: 'Computer Science' },
+      { id: '2', abbreviation: 'BSc IS', fullName: 'Bachelor of Science in Information Systems', discipline: 'Computer Science' },
+      { id: '3', abbreviation: 'BSc SE', fullName: 'Bachelor of Science in Software Engineering', discipline: 'Computer Science' },
+      { id: '4', abbreviation: 'BSc IT', fullName: 'Bachelor of Science in Information Technology', discipline: 'Information Technology' },
+      { id: '5', abbreviation: 'BSc NS', fullName: 'Bachelor of Science in Network Security', discipline: 'Information Technology' },
+      { id: '6', abbreviation: 'BSc CE', fullName: 'Bachelor of Science in Computer Engineering', discipline: 'Engineering' },
+      { id: '7', abbreviation: 'BSc EE', fullName: 'Bachelor of Science in Electrical Engineering', discipline: 'Engineering' }
+    ];
+    // Simulate network delay
+    return of(mockProgrammes).pipe(delay(300));
   }
 }

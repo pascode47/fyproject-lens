@@ -27,8 +27,8 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to FYProject Lens API' });
 });
 
-// Mount API routes under /api prefix
-app.use('/api', routes);
+// Mount API routes directly at root
+app.use('/', routes);
 
 // Error handling middleware
 app.use(errorHandler);

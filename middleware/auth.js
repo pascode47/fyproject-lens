@@ -96,9 +96,12 @@ exports.authorize = (...roles) => {
 
 // Generate JWT token
 exports.generateToken = (user) => {
+  const secret = process.env.JWT_SECRET;
+  const expiresIn = '30d'; // Hardcoding '30d' for testing
+  console.log(`Generating token with secret: ${secret ? 'Loaded' : 'Missing'}, expiresIn: ${expiresIn}`); // Log values
   return jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE }
+    secret,
+    { expiresIn: expiresIn }
   );
 };

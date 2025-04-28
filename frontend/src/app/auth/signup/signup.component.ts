@@ -81,28 +81,35 @@ export class SignupComponent implements OnInit {
       }
     });
   }
-  
+
   private loadProgrammes(): void {
-    // In a real app, this would come from an API
-    // For now, we'll use mock data
-    const programmesList: Programme[] = [
-      { id: '1', abbreviation: 'BSc CS', fullName: 'Bachelor of Science in Computer Science', discipline: 'Computer Science' },
-      { id: '2', abbreviation: 'BSc IS', fullName: 'Bachelor of Science in Information Systems', discipline: 'Computer Science' },
-      { id: '3', abbreviation: 'BSc SE', fullName: 'Bachelor of Science in Software Engineering', discipline: 'Computer Science' },
-      { id: '4', abbreviation: 'BSc IT', fullName: 'Bachelor of Science in Information Technology', discipline: 'Information Technology' },
-      { id: '5', abbreviation: 'BSc NS', fullName: 'Bachelor of Science in Network Security', discipline: 'Information Technology' },
-      { id: '6', abbreviation: 'BSc CE', fullName: 'Bachelor of Science in Computer Engineering', discipline: 'Engineering' },
-      { id: '7', abbreviation: 'BSc EE', fullName: 'Bachelor of Science in Electrical Engineering', discipline: 'Engineering' }
-    ];
-    
-    // Group programmes by discipline
-    this.programmes = programmesList.reduce((groups, programme) => {
-      const discipline = programme.discipline;
-      if (!groups[discipline]) {
-        groups[discipline] = [];
+    this.isLoading = true; // Start loading indicator
+    this.error = null;     // Clear previous errors
+
+    this.authService.getProgrammes().subscribe({
+      next: (programmesList) => {
+        // Group programmes by discipline
+        this.programmes = programmesList.reduce((groups, programme) => {
+          const discipline = programme.discipline;
+          if (!groups[discipline]) {
+            groups[discipline] = [];
+          }
+          groups[discipline].push(programme);
+          return groups;
+        }, {} as { [discipline: string]: Programme[] });
+        
+        this.isLoading = false; // Stop loading indicator
+      },
+      error: (err) => {
+        console.error('Error loading programmes:', err);
+        this.error = 'Failed to load programmes. Please try refreshing the page.';
+        this.isLoading = false; // Stop loading indicator even on error
       }
-      groups[discipline].push(programme);
-      return groups;
-    }, {} as { [discipline: string]: Programme[] });
+    });
+  }
+
+  // Helper method to get the keys (disciplines) of the programmes object for the template
+  getDisciplines(): string[] {
+    return Object.keys(this.programmes);
   }
 }

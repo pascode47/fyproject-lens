@@ -8,8 +8,10 @@ const { response } = require('../utils');
  * @access Public
  */
 exports.signup = async (req, res, next) => {
+  console.log('Signup request received:', req.body); // Log incoming request body
   try {
     const { name, email, password, registrationNo, programme } = req.body;
+    console.log(`Received programme abbreviation: ${programme}`); // Log the received abbreviation
     
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -24,10 +26,13 @@ exports.signup = async (req, res, next) => {
     }
     
     // Check if programme exists
+    console.log(`Searching for programme with abbreviation: ${programme}`); // Log before DB query
     const programmeDoc = await Programme.findOne({ abbreviation: programme });
     if (!programmeDoc) {
+      console.error(`Programme not found for abbreviation: ${programme}`); // Log if not found
       return response.error(res, 'Programme not found', 404);
     }
+    console.log(`Programme found: ${programmeDoc._id}`); // Log if found
     
     // Use the programme's ID for the user creation
     const programmeId = programmeDoc._id;
