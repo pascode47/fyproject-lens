@@ -1,0 +1,53 @@
+<div class="project-detail-container">
+  <div *ngIf="isLoading" class="loading-indicator">
+    Loading project details...
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="project && !isLoading && !error" class="project-content">
+    <h2>{{ project.title }}</h2>
+
+    <div class="project-meta">
+      <p><strong>Academic Year:</strong> {{ project.academicYear }}</p>
+      <p><strong>Department:</strong> {{ project.department }}</p>
+      <!-- Add other relevant meta data if available -->
+    </div>
+
+    <div class="project-summary">
+      <h3>Project Summary</h3>
+      
+      <div class="summary-section">
+        <h4>Problem Statement</h4>
+        <p>{{ project.extractedProblemStatement || 'Not available' }}</p> 
+      </div>
+
+      <div class="summary-section">
+        <h4>Objectives</h4>
+        <ul *ngIf="project.extractedObjectives && project.extractedObjectives.length > 0">
+          <li *ngFor="let objective of project.extractedObjectives">{{ objective }}</li>
+        </ul>
+        <p *ngIf="!project.extractedObjectives || project.extractedObjectives.length === 0">
+          Objectives not available.
+        </p>
+      </div>
+    </div>
+
+    <div class="report-download">
+      <h3>Project Report</h3>
+      <a *ngIf="getReportDownloadUrl()" [href]="getReportDownloadUrl()" target="_blank" download class="download-button">
+        Download Report (.docx)
+      </a>
+      <p *ngIf="!getReportDownloadUrl()">
+        Report download link is unavailable.
+      </p>
+      <!-- Alternatively, embed viewer here if implementing that -->
+    </div>
+  </div>
+
+  <div *ngIf="!project && !isLoading && !error" class="no-project">
+    <p>Project data could not be loaded.</p>
+  </div>
+</div>

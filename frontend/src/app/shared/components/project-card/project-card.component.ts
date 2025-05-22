@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-project-card',
+  standalone: true, // Added standalone: true
   imports: [CommonModule, RouterModule],
   templateUrl: './project-card.component.html',
   styleUrl: './project-card.component.css'

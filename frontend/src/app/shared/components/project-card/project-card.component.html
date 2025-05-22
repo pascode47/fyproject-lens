@@ -1,4 +1,4 @@
-<div class="project-card">
+<div class="project-card card"> <!-- Added .card class -->
   <div class="card-header">
     <h3 class="project-title">{{ title }}</h3>
     
@@ -32,8 +32,9 @@
   </div>
   
   <div class="card-footer">
-    <a [routerLink]="['/project/similarity', id]" class="view-button">
-      View Details
+    <!-- If 'id' is the ID of the project itself, this link should go to the project detail page -->
+    <a [routerLink]="['/projects', id]" class="view-button btn btn-primary"> <!-- Added .btn and .btn-primary -->
+      View Project Details
     </a>
   </div>
 </div>

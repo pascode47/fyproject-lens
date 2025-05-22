@@ -25,11 +25,13 @@ const adminDetails = {
 async function createAdminUser() {
   try {
     // Check if admin user already exists
+    // Check if admin user already exists
     const existingAdmin = await User.findOne({ email: adminDetails.email });
 
     if (existingAdmin) {
-      console.log(`Admin user with email ${adminDetails.email} already exists.`);
-      process.exit(0);
+      console.log(`Admin user with email ${adminDetails.email} already exists. Deleting it...`);
+      await User.deleteOne({ email: adminDetails.email });
+      console.log(`Admin user with email ${adminDetails.email} deleted.`);
     }
     
     // Check if we have any programmes in the database

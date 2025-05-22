@@ -13,8 +13,9 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Increase payload limits for JSON and URL-encoded bodies (might not affect multipart, but good practice)
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Database connection
@@ -27,8 +28,8 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to FYProject Lens API' });
 });
 
-// Mount API routes directly at root
-app.use('/', routes);
+// Mount API routes under /api prefix
+app.use('/api', routes);
 
 // Error handling middleware
 app.use(errorHandler);

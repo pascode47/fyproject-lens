@@ -1,8 +1,9 @@
-const { OpenAI } = require('openai');
+const { OpenAI } = require('openai'); // OpenAI class is used for Ollama client as well
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+// Initialize Ollama client
+const ollama = new OpenAI({
+  apiKey: process.env.OLLAMA_API_KEY || 'ollama', // Ollama might ignore API key, but SDK might require it. Use a placeholder.
+  baseURL: process.env.OLLAMA_BASE_URL // Ensure OLLAMA_BASE_URL is in your .env file
 });
 
 /**
@@ -47,29 +48,82 @@ exports.generateRecommendations = async (projectData, similarProjects) => {
       
       Return only the recommendations as a numbered list.
     `;
-    
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 1000
+
+    // Call Ollama API
+    if (!process.env.OLLAMA_BASE_URL) {
+      console.error('OLLAMA_BASE_URL not set in .env. Cannot generate recommendations with Ollama.');
+      console.warn('Returning fallback recommendations due to missing Ollama configuration.');
+      return generateFallbackRecommendations(projectData, similarProjects);
+    }
+    if (!process.env.OLLAMA_MODEL) {
+      console.warn('OLLAMA_MODEL not set in .env. Defaulting to "llama3" for recommendations.');
+    }
+
+    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL;
+    const chatModelToUse = process.env.OLLAMA_CHAT_MODEL || 'llama3'; // Use specific chat model
+
+    console.log(`Attempting Ollama recommendation generation with model: ${chatModelToUse} using direct fetch to ${ollamaBaseUrl}/api/chat`);
+
+    const fetchResponse = await fetch(`${ollamaBaseUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: chatModelToUse, // Use chat model
+        messages: [{ role: 'user', content: prompt }],
+        stream: false, // Important: Ollama's /api/chat expects this for non-streaming
+        options: { // Ollama specific options can go here
+          temperature: 0.5,
+          // max_tokens is not a direct parameter for Ollama's /api/chat in the same way,
+          // context window and model limits apply.
+          // num_predict could be an equivalent if needed, but often not required for short completions.
+        }
+      }),
     });
+
+    if (!fetchResponse.ok) {
+      const errorBody = await fetchResponse.text();
+      console.error(`Ollama API error for chat! Status: ${fetchResponse.status}, Body: ${errorBody}`);
+      throw new Error(`Ollama API request for chat failed with status ${fetchResponse.status}`);
+    }
+
+    const responseJson = await fetchResponse.json();
+    // console.log("Raw JSON response from Ollama /api/chat endpoint:", JSON.stringify(responseJson, null, 2));
+
+    if (!responseJson || !responseJson.message || !responseJson.message.content) {
+      console.error('Unexpected or empty response structure from Ollama /api/chat. Full response logged above if enabled.');
+      throw new Error('Failed to parse valid message content from Ollama chat response.');
+    }
     
-    // Extract recommendations from response
-    const content = response.choices[0].message.content;
+    const content = responseJson.message.content;
     
-    // Split by numbered lines and clean up
-    const recommendations = content
-      .split(/\d+\./)
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
+    // Attempt to parse numbered list, otherwise return raw content split by newlines
+    let recommendations;
+    if (/\d+\./.test(content)) { // Check if content contains numbered list pattern
+        recommendations = content
+        .split(/\d+\.\s*/) // Split by number, dot, and optional space
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+    } else {
+        // If not a clear numbered list, split by newline and filter empty lines
+        recommendations = content
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+    }
+    
+    if (recommendations.length === 0 && content.length > 0) {
+        // If splitting failed but there's content, return the whole content as a single recommendation
+        console.warn("Could not parse recommendations into a list, returning raw content as one item.");
+        return [content.trim()];
+    }
     
     return recommendations;
+
   } catch (error) {
-    console.error('Error generating recommendations:', error);
-    
-    // Return fallback recommendations if OpenAI fails
+    console.error('Error generating recommendations with Ollama:', error.message);
+    console.warn('Returning fallback recommendations due to Ollama error.');
     return generateFallbackRecommendations(projectData, similarProjects);
   }
 };

@@ -26,8 +26,8 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
 
   // Filters & Search
   searchTerm: string = '';
-  departmentFilter: string = ''; // Use empty string for 'all'
-  yearFilter: string = '';     // Use empty string for 'all'
+  departmentFilter: string = ''; // Changed from programmeFilter
+  academicYearFilter: string = ''; 
 
   // Single Project Upload
   selectedProjectFile: File | null = null;
@@ -65,11 +65,12 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
     this.error = null;
 
     // Prepare filter parameters
-    const department = this.departmentFilter || undefined;
-    const year = this.yearFilter || undefined;
+    const department = this.departmentFilter || undefined; // Changed from programme
+    const academicYear = this.academicYearFilter || undefined;
     const search = this.searchTerm || undefined;
 
-    this.adminService.getProjects(this.currentPage, this.itemsPerPage, department, year, search)
+    // Pass filters to the service call
+    this.adminService.getProjects(this.currentPage, this.itemsPerPage, department, academicYear, search)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: PaginatedResponse<Project>) => {
@@ -192,7 +193,7 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
   }
 
   // Helper method to safely get uploader name
-  getUploaderName(uploadedBy: string | { _id?: string; id?: string; name: string }): string {
+  getUploaderName(uploadedBy: string | { _id?: string; id?: string; name: string } | undefined): string { // Allow undefined
     if (typeof uploadedBy === 'object' && uploadedBy !== null && uploadedBy.name) {
       return uploadedBy.name;
     }

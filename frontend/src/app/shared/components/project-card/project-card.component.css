@@ -1,13 +1,19 @@
+/* Inherit base card styles from global styles.css by ensuring the host element or a wrapper has the .card class if not already applied via HTML structure.
+   If .project-card is meant to BE the card, we can simplify.
+   Assuming .project-card IS the card itself: */
 .project-card {
-  background-color: white;
+  /* These properties are already in global .card, but specificity might require them here or ensure .card is also on the element */
+  background-color: #fff; /* or var(--light-color) if preferred over pure white */
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   overflow: hidden;
+  /* End of potentially redundant properties */
+
   transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
   height: 100%;
   display: flex;
   flex-direction: column;
-  position: relative;
+  position: relative; /* For ::after pseudo-element */
 }
 
 .project-card:hover {
@@ -15,13 +21,14 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* Use global .card-header properties by ensuring the HTML element has this class */
 .card-header {
-  padding: var(--spacing-4);
-  border-bottom: 1px solid var(--gray-200);
+  padding: var(--spacing-4); /* Already in global .card-header */
+  border-bottom: 1px solid var(--gray-200); /* Slightly different from global, can keep or align */
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  background-color: var(--gray-50, #fafafa);
+  background-color: var(--gray-100); /* Aligned to existing variable */
 }
 
 .project-title {
@@ -120,28 +127,42 @@
   font-weight: 500;
 }
 
+/* Use global .card-footer properties */
 .card-footer {
-  padding: var(--spacing-4);
-  border-top: 1px solid var(--gray-200);
+  padding: var(--spacing-4); /* Already in global .card-footer */
+  border-top: 1px solid var(--gray-200); /* Slightly different from global, can keep or align */
   text-align: right;
-  background-color: var(--gray-50, #fafafa);
+  background-color: var(--gray-100); /* Aligned to existing variable */
 }
 
+/* Apply global button styles and add any specific overrides if necessary */
 .view-button {
+  /* Base styles from .btn */
   display: inline-block;
-  padding: 0.5rem 1rem;
-  background-color: var(--primary-color);
-  color: white;
-  border-radius: var(--border-radius);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
   font-weight: 500;
-  transition: background-color var(--transition-fast) ease, transform var(--transition-fast) ease;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem; /* Consistent with .btn */
+  font-size: var(--font-size-sm); /* Specific size for this button */
+  line-height: 1.5;
+  border-radius: var(--border-radius);
+  transition: all var(--transition-fast) ease-in-out, transform var(--transition-fast) ease; /* Added transform to all transition */
+  cursor: pointer;
+
+  /* Styles from .btn-primary */
+  color: white;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  text-decoration: none; /* Ensure no underline from <a> tag */
 }
 
 .view-button:hover {
   background-color: var(--primary-dark);
-  transform: translateY(-2px);
+  border-color: var(--primary-dark);
+  transform: translateY(-2px); /* Keep this specific hover effect */
 }
 
 /* Add a subtle hover effect */

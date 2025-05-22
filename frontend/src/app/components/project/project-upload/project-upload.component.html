@@ -11,9 +11,11 @@
       (fileSelected)="onFileSelected($event)">
     </app-file-upload>
 
-    <button (click)="uploadFile()" [disabled]="!file || isUploading" class="upload-button">
+    <button (click)="uploadFile()" [disabled]="!file || isUploading" class="upload-button btn btn-primary">
       <span *ngIf="!isUploading">Upload</span>
-      <span *ngIf="isUploading">Uploading...</span>
+      <span *ngIf="isUploading">
+        <span class="spinner"></span> Uploading...
+      </span>
     </button>
   </div>
 

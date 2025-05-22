@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { ProjectService } from '../../../services/project.service';
 import { SimilarityService } from '../../../services/similarity.service';
 import { FileUploadComponent } from '../../../shared/file-upload/file-upload.component';
-import { ProjectCardComponent } from '../../../shared/project-card/project-card.component';
+import { ProjectCardComponent } from '../../../shared/components/project-card/project-card.component';
 import { SimilarityResult } from '../../../models/similarity-result';
 
 @Component({

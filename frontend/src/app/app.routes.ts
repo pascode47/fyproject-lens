@@ -3,10 +3,11 @@ import { LoginComponent } from "./auth/login/login.component";
 import { SignupComponent } from "./auth/signup/signup.component";
 import { HomeComponent } from "./features/home/home.component";
 import { ProjectListComponent } from "./features/browse-projects/project-list.component";
-import { ProjectUploadComponent } from "./features/upload-analysis/project-upload.component";
+// import { ProjectUploadComponent } from "./features/upload-analysis/project-upload.component"; // Removed
 import { SimilarityResultsComponent } from "./features/upload-analysis/similarity-results.component";
 import { RecommendationListComponent } from "./features/popular-ideas/recommendation-list.component";
 import { ProfileComponent } from "./features/profile/profile.component";
+import { ProjectDetailComponent } from "./features/project-detail/project-detail.component"; // Import the new component
 import { AuthGuard } from "./core/auth.guard";
 import { AdminGuard } from "./core/admin.guard";
 
@@ -18,8 +19,14 @@ export const routes: Routes = [
   // Feature routes
   { path: 'home', component: HomeComponent },
   { path: 'browse-projects', component: ProjectListComponent, canActivate: [AuthGuard] },
-  { path: 'upload-analysis', component: ProjectUploadComponent, canActivate: [AuthGuard] },
+  // { path: 'upload-analysis', component: ProjectUploadComponent, canActivate: [AuthGuard] }, // This route is removed
+  { 
+    path: 'check-proposal', 
+    loadComponent: () => import('./features/proposal-check/proposal-check.component').then(m => m.ProposalCheckComponent),
+    canActivate: [AuthGuard] 
+  },
   { path: 'project/similarity/:id', component: SimilarityResultsComponent, canActivate: [AuthGuard] },
+  { path: 'projects/:id', component: ProjectDetailComponent, canActivate: [AuthGuard] }, // Add the new route
   { path: 'popular-ideas', component: RecommendationListComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   

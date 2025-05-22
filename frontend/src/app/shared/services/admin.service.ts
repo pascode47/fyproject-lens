@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http'; // Import HttpParams and HttpHeaders
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs'; // Import throwError
 import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../../models/user';
@@ -179,16 +179,16 @@ export class AdminService {
    * Get projects with pagination and filtering (for admin view)
    * @param page Page number
    * @param limit Items per page
-   * @param department Filter by department
-   * @param year Filter by year
+   * @param programme Filter by programme (department/course)
+   * @param academicYear Filter by academic year
    * @param search Search term
    * @returns Observable with paginated list of projects
    */
   getProjects(
     page: number = 1, 
     limit: number = 10, 
-    department?: string, 
-    year?: string, 
+    department?: string, // Changed from programme
+    academicYear?: string, 
     search?: string
   ): Observable<PaginatedResponse<Project>> {
     let params = new HttpParams()
@@ -196,10 +196,10 @@ export class AdminService {
       .set('limit', limit.toString());
 
     if (department) {
-      params = params.set('department', department);
+      params = params.set('department', department); // Use 'department' for the query param
     }
-    if (year) {
-      params = params.set('year', year);
+    if (academicYear) {
+      params = params.set('academicYear', academicYear);
     }
     if (search) {
       params = params.set('search', search);
@@ -240,18 +240,25 @@ export class AdminService {
     // Use 'projectFile' as the key, matching the backend middleware upload.single('projectFile')
     formData.append('projectFile', projectFile, projectFile.name); 
 
-    // Don't use the createAuthHeaders for FormData - manually add the token
+    // --- Correctly handle headers for FormData ---
     const token = this.getAuthToken();
-    const headers = new HttpHeaders();
-    
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+    let headers = new HttpHeaders(); // Start with empty headers
+
+    if (!token) {
+      console.error('Upload failed: No authorization token found in AdminService.');
+      return throwError(() => new Error('Authentication token is missing. Please log in again.'));
     }
-    
+
+    // Assign the result of .set() back to the headers variable
+    headers = headers.set('Authorization', `Bearer ${token}`);
+    // DO NOT set Content-Type for FormData; the browser does this automatically with the correct boundary.
+
+    console.log('AdminService Upload Project Headers:', headers.keys()); // Log header keys
+
     return this.http.post<any>(
       `${this.apiUrl}/projects/upload`, // Correct endpoint
       formData,
-      { headers }
+      { headers: headers } // Pass the correctly constructed headers
     ).pipe(
       map(response => {
         // Map the backend response to the expected format

@@ -28,34 +28,53 @@ h2 {
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  /* .btn and .btn-primary from global styles.css will handle most of this.
+     Specific overrides can remain if needed. */
 }
 
-.upload-button:hover:not([disabled]) {
-  background-color: #0069d9;
-}
-
+/* .btn-primary:hover from global styles.css handles hover state */
+/* .btn:disabled or .upload-button[disabled] can use global disabled styles or override */
 .upload-button[disabled] {
-  background-color: #6c757d;
+  /* Global .btn:disabled might exist, or we can use these specific styles */
+  background-color: var(--gray-500); /* Using a variable */
   cursor: not-allowed;
   opacity: 0.65;
 }
 
+.spinner {
+  display: inline-block;
+  width: 1em; /* Relative to font size */
+  height: 1em; /* Relative to font size */
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5em;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .error-message {
-  padding: 10px;
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  border-radius: 4px;
-  margin: 10px 0;
+  padding: var(--spacing-3); /* Using spacing variable */
+  background-color: var(--danger-color-light, #f8d7da); /* Add --danger-color-light to styles.css or use existing */
+  color: var(--danger-color-dark, #721c24); /* Add --danger-color-dark or use existing */
+  border: 1px solid var(--danger-color, #e74c3c);
+  border-radius: var(--border-radius-sm); /* Using border-radius variable */
+  margin: var(--spacing-3) 0; /* Using spacing variable */
 }
 
 .success-message {
-  padding: 10px;
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-  border-radius: 4px;
-  margin: 10px 0;
+  padding: var(--spacing-3); /* Using spacing variable */
+  background-color: var(--success-color-light, #d4edda); /* Add --success-color-light or use existing */
+  color: var(--success-color-dark, #155724); /* Add --success-color-dark or use existing */
+  border: 1px solid var(--success-color, #2ecc71);
+  border-radius: var(--border-radius-sm); /* Using border-radius variable */
+  margin: var(--spacing-3) 0; /* Using spacing variable */
 }
 
 .extracted-info, .similarity-results, .no-similarities {

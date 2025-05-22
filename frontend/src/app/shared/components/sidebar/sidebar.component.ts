@@ -21,12 +21,12 @@ export class SidebarComponent {
       icon: '🏠'
     },
     { 
-      label: 'Upload Project', 
+      label: 'Upload Proposal', 
       path: '/project/upload', 
       icon: '📄'
     },
     { 
-      label: 'Browse Projects', 
+      label: 'Existing Projects', 
       path: '/project/list', 
       icon: '📚'
     },

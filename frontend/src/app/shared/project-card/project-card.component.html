@@ -1,6 +1,6 @@
-<div class="project-card">
+<div class="project-card" *ngIf="project"> <!-- Add *ngIf to ensure project exists -->
   <div class="card-header">
-    <h3 class="project-title">{{ title }}</h3>
+    <h3 class="project-title">{{ project.title }}</h3>
     
     <!-- Similarity badge (shown only when showSimilarity is true) -->
     <div *ngIf="showSimilarity && similarityPercentage !== undefined" 
@@ -14,26 +14,28 @@
     <div class="project-meta">
       <div class="meta-item">
         <span class="meta-label">Year:</span>
-        <span class="meta-value">{{ year }}</span>
+        <span class="meta-value">{{ project.academicYear }}</span> <!-- Use project.academicYear -->
       </div>
       <div class="meta-item">
-        <span class="meta-label">Department:</span>
-        <span class="meta-value">{{ department }}</span>
+        <span class="meta-label">Programme:</span> <!-- Changed label to Programme -->
+        <span class="meta-value">{{ project.department }}</span> <!-- Use project.programme -->
       </div>
     </div>
     
-    <p *ngIf="description" class="project-description">
-      {{ description }}
+    <p *ngIf="project.description" class="project-description">
+      {{ project.description }}
     </p>
     
-    <div *ngIf="tags && tags.length > 0" class="project-tags">
-      <span *ngFor="let tag of tags" class="tag">{{ tag }}</span>
+    <div *ngIf="project.tags && project.tags.length > 0" class="project-tags">
+      <span *ngFor="let tag of project.tags" class="tag">{{ tag }}</span>
     </div>
   </div>
   
   <div class="card-footer">
-    <a [routerLink]="['/project/similarity', id]" class="view-button">
-      View Details
+    <!-- Link to a generic project detail page, or similarity if appropriate -->
+    <!-- Assuming project._id is the identifier -->
+    <a [routerLink]="['/projects', project._id]" class="view-button"> 
+      View Details 
     </a>
   </div>
 </div>

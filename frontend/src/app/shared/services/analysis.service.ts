@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { SimilarityResult } from '../../models/similarity-result';
 import { Analysis } from '../../models/analysis';
+import { ProposalCheckApiResponse } from '../../models/proposal-check.model'; // Updated import
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +37,7 @@ export class AnalysisService {
     return this.http.get<{
       projectTitle: string;
       results: SimilarityResult[];
-    }>(`${this.apiUrl}/api/similarity/${projectId}`).pipe(
+    }>(`${this.apiUrl}/similarity/${projectId}`).pipe( // Removed /api/ prefix here
       catchError(error => {
         console.error('Error fetching similarity results:', error);
         return this.getMockSimilarityResults(projectId);
@@ -54,12 +55,34 @@ export class AnalysisService {
       return this.getMockRecommendations();
     }
 
-    return this.http.get<string[]>(`${this.apiUrl}/projects/recommend?projectId=${projectId}`).pipe(
+    return this.http.get<string[]>(`${this.apiUrl}/similarity/recommend/${projectId}`).pipe( // Removed /api/ prefix here
       catchError(error => {
         console.error('Error fetching recommendations:', error);
         return this.getMockRecommendations();
       })
     );
+  }
+
+  /**
+   * Check similarity of an uploaded proposal file.
+   * This does not save the proposal as a project.
+   * @param formData The FormData containing the proposal file (key: 'proposalFile')
+   * @returns Observable with the full API response structure
+   */
+  checkProposalSimilarity(formData: FormData): Observable<ProposalCheckApiResponse> {
+    // Mock data should ideally not be used for POST operations in a real scenario,
+    // but if needed for specific testing/dev phases, it could be added.
+    // For now, directly call the API.
+    return this.http.post<ProposalCheckApiResponse>(`${this.apiUrl}/similarity/check-proposal`, formData) // Removed /api/ prefix here
+      .pipe(
+        catchError(error => {
+          console.error('Error checking proposal similarity:', error);
+          // Rethrow the error or return a user-friendly error structure
+          // For example: return throwError(() => new Error('Proposal check failed'));
+          // Or: return of({ proposalDetails: {}, similarProjects: [], recommendations: ['Error processing proposal.'] });
+          throw error; // Propagate the error to be handled by the component
+        })
+      );
   }
 
   /**

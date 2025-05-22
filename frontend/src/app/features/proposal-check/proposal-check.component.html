@@ -1,0 +1,113 @@
+<div class="proposal-check-container">
+  <h2>Check Proposal Similarity & Get Recommendations</h2>
+  <p>Upload your proposal or concept note (.docx or .pdf) to see how it compares to existing projects and receive feedback.</p>
+
+  <!-- 1. File Upload Section -->
+  <div class="upload-section card">
+    <app-file-upload 
+      label="Choose Proposal File (.docx, .pdf)" 
+      accept=".docx,.pdf" 
+      [maxSizeMB]="10" 
+      (fileSelected)="onFileSelected($event)">
+    </app-file-upload>
+
+    <button 
+      (click)="analyzeProposal()" 
+      [disabled]="!selectedFile || isProcessing" 
+      class="analyze-button btn btn-primary">
+      <span *ngIf="!isProcessing">Analyze Proposal</span>
+      <span *ngIf="isProcessing"><span class="spinner"></span> Processing...</span>
+    </button>
+
+    <div *ngIf="processingError" class="error-message">
+      {{ processingError }}
+    </div>
+  </div>
+
+  <!-- Loading Indicator for entire results section -->
+  <div *ngIf="isProcessing && !analysisResult" class="loading-results">
+    <p>Analyzing your proposal, please wait...</p>
+    <!-- Add a spinner or visual loader here if desired -->
+  </div>
+
+  <!-- 2. Results Section (Extracted Details, Similar Projects, Recommendations) -->
+  <div *ngIf="analysisResult && !isProcessing" class="results-section">
+    
+    <!-- 2a. Extracted Proposal Details -->
+    <div *ngIf="extractedProposalDetails" class="extracted-details-card card">
+      <h3>Extracted Information from Your Proposal</h3>
+      <div class="info-grid">
+        <div class="info-item" *ngIf="extractedProposalDetails.title">
+          <strong>Title:</strong>
+          <p>{{ extractedProposalDetails.title }}</p>
+        </div>
+        <div class="info-item" *ngIf="extractedProposalDetails.problemStatement">
+          <strong>Problem Statement:</strong>
+          <p>{{ extractedProposalDetails.problemStatement }}</p>
+        </div>
+        <div class="info-item" *ngIf="extractedProposalDetails.objectives && extractedProposalDetails.objectives.length > 0">
+          <strong>Objectives:</strong>
+          <ul>
+            <li *ngFor="let objective of extractedProposalDetails.objectives">{{ objective }}</li>
+          </ul>
+        </div>
+        <div class="info-item" *ngIf="extractedProposalDetails.department">
+          <strong>Department:</strong>
+          <p>{{ extractedProposalDetails.department }}</p>
+        </div>
+        <div class="info-item" *ngIf="extractedProposalDetails.academicYear">
+          <strong>Academic Year:</strong>
+          <p>{{ extractedProposalDetails.academicYear }}</p>
+        </div>
+        <div class="info-item" *ngIf="extractedProposalDetails.supervisor">
+          <strong>Supervisor:</strong>
+          <p>{{ extractedProposalDetails.supervisor }}</p>
+        </div>
+        <div class="info-item" *ngIf="extractedProposalDetails.students && extractedProposalDetails.students.length > 0">
+          <strong>Students:</strong>
+          <ul>
+            <li *ngFor="let student of extractedProposalDetails.students">{{ student }}</li>
+          </ul>
+        </div>
+      </div>
+      <p *ngIf="!extractedProposalDetails.title && !extractedProposalDetails.problemStatement && (!extractedProposalDetails.objectives || extractedProposalDetails.objectives.length === 0)" class="no-info-extracted">
+        Could not extract detailed information from the proposal. Similarity and recommendations will be based on the overall text content.
+      </p>
+    </div>
+
+    <!-- 2b. Similar Projects -->
+    <div *ngIf="similarProjectsList.length > 0" class="similar-projects-card card">
+      <h3>Similar Existing Projects</h3>
+      <div class="projects-grid">
+        <div *ngFor="let project of similarProjectsList">
+          <app-project-card
+            [id]="project.projectId"
+            [title]="project.projectTitle"
+            [year]="project.year"
+            [department]="project.department"
+            [similarityPercentage]="project.similarityPercentage"
+            [tags]="project.similarSections"
+            [showSimilarity]="true">
+          </app-project-card>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="analysisResult && similarProjectsList.length === 0 && !processingError" class="no-similar-projects card">
+      <h3>No Significant Similarities Found</h3>
+      <p>Your proposal appears to be quite unique based on the current database!</p>
+    </div>
+
+    <!-- 2c. Recommendations -->
+    <div *ngIf="recommendationsList.length > 0" class="recommendations-card card">
+      <h3>Recommendations for Your Proposal</h3>
+      <ul>
+        <li *ngFor="let recommendation of recommendationsList">{{ recommendation }}</li>
+      </ul>
+    </div>
+    <div *ngIf="analysisResult && recommendationsList.length === 0 && !processingError" class="no-recommendations card">
+      <h3>No Specific Recommendations Generated</h3>
+      <p>No specific recommendations were generated at this time. This might happen if no similar projects were found or if the proposal content was too brief.</p>
+    </div>
+
+  </div>
+</div>

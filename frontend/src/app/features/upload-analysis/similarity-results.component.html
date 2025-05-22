@@ -21,12 +21,12 @@
     </div>
     
     <!-- No results state -->
-    <div *ngIf="similarityResults.length === 0" class="no-results">
+    <div *ngIf="similarityResults && similarityResults.length === 0" class="no-results">
       <p>No similarities found. Your project appears to be unique!</p>
     </div>
     
     <!-- Results grid using project-card component -->
-    <div *ngIf="similarityResults.length > 0" class="results-section">
+    <div *ngIf="similarityResults && similarityResults.length > 0" class="results-section">
       <p class="results-count">Found {{ similarityResults.length }} similar projects</p>
       
       <div class="results-grid">

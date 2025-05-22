@@ -1,9 +1,11 @@
 // services/project.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http'; // Import HttpHeaders
+import { Observable, of, throwError } from 'rxjs'; // Import throwError
+import { catchError, map } from 'rxjs/operators'; // Import map
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../core/auth.service'; // Import AuthService
+import { Project } from '../../models/project'; // Import Project model
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +13,25 @@ import { environment } from '../../../environments/environment';
 export class ProjectService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  // Inject AuthService
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  // Helper to get auth headers
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    if (token) {
+      return new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+        // Note: Content-Type for FormData is set automatically by the browser/HttpClient
+      });
+    }
+    // It's generally better to prevent the request if no token,
+    // but returning empty headers might work depending on backend setup.
+    // Throwing an error might be safer.
+    console.error("Attempted to make authenticated request without token.");
+    return new HttpHeaders(); // Or throw an error
+  }
+
 
   getStatistics(): Observable<any> {
     if (environment.production || environment.useMockData) {
@@ -47,45 +67,116 @@ export class ProjectService {
         projectId: '12345'
       });
     }
-    
-    return this.http.post(`${this.apiUrl}/projects/upload`, formData).pipe(
+
+    // --- Explicitly get token and create headers here ---
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('Upload failed: No authorization token found directly in uploadProject method.');
+      return throwError(() => new Error('Authentication token is missing. Please log in again.'));
+    }
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+      // Content-Type for FormData is set automatically
+    });
+    console.log('Upload Project Headers:', headers.keys()); // Log header keys to confirm
+
+    // Pass headers in the options object
+    return this.http.post(`${this.apiUrl}/projects/upload`, formData, { headers: headers }).pipe(
       catchError(error => {
         console.error('Error uploading project:', error);
-        return of({
+        // Try to return a more specific error message from the backend if possible
+        const message = error?.error?.message || 'Failed to upload project. Please try again later.';
+        return throwError(() => new Error(message)); // Propagate error
+        /* return of({ // Old way: swallowing the error
           success: false,
-          message: 'Failed to upload project. Please try again later.'
-        });
+          message: message
+        }); */
       })
     );
   }
 
   getAllProjects(): Observable<any> {
+    // Assuming this might need auth in the future, let's add headers
+    const headers = this.getAuthHeaders();
+    if (!headers.has('Authorization')) {
+       // Decide how to handle - maybe allow public access? For now, log warning.
+       console.warn('Fetching all projects without auth token.');
+       // return throwError(() => new Error('Authentication token is missing.'));
+    }
+
     if (environment.production || environment.useMockData) {
       return this.getMockProjects();
     }
-    
-    return this.http.get(`${this.apiUrl}/projects`).pipe(
+
+    // Pass headers if they exist
+    const options = headers.has('Authorization') ? { headers: headers } : {};
+    return this.http.get(`${this.apiUrl}/projects`, options).pipe(
       catchError(error => {
         console.error('Error fetching projects:', error);
-        return this.getMockProjects();
+        // Decide if mock data is appropriate fallback here
+        // return this.getMockProjects();
+        const message = error?.error?.message || 'Failed to fetch projects.';
+        return throwError(() => new Error(message));
       })
     );
   }
 
   getProjectById(id: string): Observable<any> {
+    // Assuming this might need auth in the future, let's add headers
+    const headers = this.getAuthHeaders();
+     if (!headers.has('Authorization')) {
+       // Decide how to handle - maybe allow public access? For now, log warning.
+       console.warn(`Fetching project ${id} without auth token.`);
+       // return throwError(() => new Error('Authentication token is missing.'));
+    }
+
     if (environment.production || environment.useMockData) {
       return this.getMockProjectById(id);
     }
-    
-    return this.http.get(`${this.apiUrl}/projects/${id}`).pipe(
+
+    // Pass headers if they exist
+    const options = headers.has('Authorization') ? { headers: headers } : {};
+    return this.http.get(`${this.apiUrl}/projects/${id}`, options).pipe(
       catchError(error => {
         console.error(`Error fetching project with ID ${id}:`, error);
-        return this.getMockProjectById(id);
+        // Decide if mock data is appropriate fallback here
+        // return this.getMockProjectById(id);
+         const message = error?.error?.message || `Failed to fetch project ${id}.`;
+        return throwError(() => new Error(message));
       })
     );
   }
 
-  // Mock data for build/SSR process
+  // --- New methods for browsing ---
+
+  getAcademicYears(): Observable<string[]> {
+    // No auth needed for public browsing data typically
+    return this.http.get<string[]>(`${this.apiUrl}/projects/years`).pipe(
+      catchError(error => {
+        console.error('Error fetching academic years:', error);
+        const message = error?.error?.message || 'Failed to fetch academic years.';
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  getProjectsByYear(year: string): Observable<Project[]> {
+    // No auth needed for public browsing data typically
+    // Backend now returns Project[] directly for this endpoint
+    return this.http.get<Project[]>(`${this.apiUrl}/projects/year/${year}`).pipe(
+      catchError(error => {
+        console.error(`Error fetching projects for year ${year}:`, error);
+        const message = error?.error?.message || `Failed to fetch projects for year ${year}.`;
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  // --- End of new methods ---
+
+
+  // Mock data for build/SSR process (Keep as is)
   private getMockStatistics(): Observable<any> {
     return of({
       totalProjects: 156,

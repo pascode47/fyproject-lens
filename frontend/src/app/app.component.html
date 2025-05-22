@@ -1,9 +1,9 @@
-<div class="app-layout" [class.sidebar-collapsed]="sidebarCollapsed">
-  <app-sidebar (sidebarToggled)="onSidebarToggle($event)"></app-sidebar>
-  <div class="main-content">
-    <app-header></app-header>
+<app-header></app-header>
+<div class="page-content-wrapper" [class.sidebar-collapsed]="sidebarCollapsed">
+  <app-sidebar *ngIf="isUserLoggedIn" (sidebarToggled)="onSidebarToggle($event)"></app-sidebar>
+  <main class="main-content" [class.full-width]="!isUserLoggedIn">
     <div class="content-container">
       <router-outlet></router-outlet>
     </div>
-  </div>
+  </main>
 </div>

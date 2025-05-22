@@ -5,11 +5,16 @@
   /* Color Palette */
   --primary-color: #3498db;
   --primary-dark: #2980b9;
+  --primary-color-light: #7bbdf2; /* Added for loading spinner consistency */
   --secondary-color: #2c3e50;
   --accent-color: #e74c3c;
   --success-color: #2ecc71;
   --warning-color: #f39c12;
   --danger-color: #e74c3c;
+  --danger-color-light: #f8d7da;
+  --danger-color-dark: #721c24;
+  --success-color-light: #d4edda;
+  --success-color-dark: #155724;
   --light-color: #ecf0f1;
   --dark-color: #2c3e50;
   --gray-100: #f8f9fa;
@@ -429,28 +434,5 @@ a:hover {
   
   h3 {
     font-size: var(--font-size-xl);
-  }
-}
-
-/* Layout Classes */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  padding: var(--spacing-4);
-  margin-left: var(--sidebar-width);
-  transition: margin-left var(--transition-normal) ease;
-}
-
-@media (max-width: 992px) {
-  .main-content {
-    margin-left: 0;
-  }
-  
-  .sidebar-collapsed .main-content {
-    margin-left: 0;
   }
 }

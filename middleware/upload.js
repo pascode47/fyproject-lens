@@ -24,15 +24,15 @@ const storage = multer.diskStorage({
 // File filter function for different upload types
 const fileFilter = (req, file, cb) => {
   // Determine allowed types based on the route or fieldname if necessary
-  // For general project uploads (docx, pdf)
-  if (file.fieldname === 'projectFile') {
+  // For general project uploads (docx, pdf) and proposal uploads
+  if (file.fieldname === 'projectFile' || file.fieldname === 'proposalFile') {
     if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
         file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
-      cb(new Error('Only .docx and .pdf files are allowed for project uploads'), false);
+      cb(new Error('Only .docx and .pdf files are allowed for project/proposal uploads'), false);
     }
-  } 
+  }
   // For bulk CSV uploads
   else if (file.fieldname === 'csvFile') {
     if (file.mimetype === 'text/csv') {
@@ -58,6 +58,9 @@ const upload = multer({
 
 // Middleware for handling docx file uploads
 exports.uploadDocx = upload.single('projectFile');
+
+// Middleware for handling proposal file uploads
+exports.uploadProposal = upload.single('proposalFile');
 
 // Middleware for handling CSV file uploads
 exports.uploadCsv = upload.single('csvFile');

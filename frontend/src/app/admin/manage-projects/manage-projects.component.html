@@ -25,7 +25,7 @@
           accept=".docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, .pdf, application/pdf" 
           (change)="onProjectFileSelected($event)"
           #projectFileInput 
-        /> <!-- Use standard self-closing syntax and remove comment -->
+        />
         <small class="form-hint">Allowed types: DOCX, PDF. Max size: 10MB.</small>
       </div>
       
@@ -58,7 +58,7 @@
           [(ngModel)]="searchTerm" 
           (input)="onSearchChange()" 
           placeholder="Search by title, department..."
-        >
+        />
       </div>
       
       <div class="filter-group">
@@ -69,7 +69,7 @@
           [(ngModel)]="departmentFilter" 
           (input)="onFilterChange()" 
           placeholder="Filter by department"
-        > 
+        />
         <!-- Consider using a datalist or select if departments are known -->
       </div>
       
@@ -78,10 +78,10 @@
         <input 
           type="number" 
           id="yearFilter" 
-          [(ngModel)]="yearFilter" 
+          [(ngModel)]="academicYearFilter" 
           (input)="onFilterChange()" 
           placeholder="Filter by year"
-        >
+        />
       </div>
     </div>
     
@@ -99,8 +99,8 @@
           <tr>
             <th>Title</th>
             <th>Department</th>
-            <th>Year</th>
-            <th>Uploaded By</th> <!-- Assuming Project model has uploadedBy populated -->
+            <th>Academic Year</th>
+            <th>Uploaded By</th> 
             <th>Actions</th>
           </tr>
         </thead>
@@ -108,18 +108,14 @@
           <tr *ngFor="let project of projects">
             <td>{{ project.title }}</td>
             <td>{{ project.department }}</td>
-            <td>{{ project.year }}</td>
-            <!-- Use helper method to get uploader name -->
+            <td>{{ project.academicYear }}</td>
             <td>{{ getUploaderName(project.uploadedBy) }}</td> 
             <td class="actions-cell">
-              <!-- Add View/Download button if needed -->
-              <!-- <a [href]="project.filePath" target="_blank" class="btn-secondary">View</a> -->
               <button 
-                (click)="deleteProject(project.id, project.title)" 
+                (click)="deleteProject(project._id, project.title)" 
                 class="btn-danger"
                 title="Delete project"
-                [disabled]="isLoading"
-              >
+                [disabled]="isLoading">
                 Delete
               </button>
             </td>

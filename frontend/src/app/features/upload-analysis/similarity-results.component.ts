@@ -14,10 +14,10 @@ import { ProjectCardComponent } from '../../shared/components/project-card/proje
 })
 export class SimilarityResultsComponent implements OnInit {
   projectId: string | null = null;
-  projectTitle: string = '';
+  projectTitle: string = ''; // Already initialized, which is good
   isLoading: boolean = true;
   error: string | null = null;
-  similarityResults: SimilarityResult[] = [];
+  similarityResults: SimilarityResult[] = []; // Already initialized, which is good
 
   constructor(
     private route: ActivatedRoute,

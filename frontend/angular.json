@@ -62,7 +62,8 @@
               "buildTarget": "fyproject-lens:build:production"
             },
             "development": {
-              "buildTarget": "fyproject-lens:build:development"
+              "buildTarget": "fyproject-lens:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

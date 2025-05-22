@@ -22,14 +22,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: '🏠',
       requiresAuth: false
     },
-    { 
-      label: 'Upload Project', 
-      path: '/upload-analysis', 
-      icon: '📄',
-      requiresAuth: false
+    // { 
+    //   label: 'Upload Proposal', 
+    //   path: '/upload-analysis', 
+    //   icon: '📤', // Icon for uploading final project
+    //   requiresAuth: true // Assuming uploading final project requires auth
+    // }, // This menu item is removed
+    {
+      label: 'Check Proposal',
+      path: '/check-proposal',
+      icon: '🔍', // Icon for checking/analyzing a proposal
+      requiresAuth: true 
     },
     { 
-      label: 'Browse Projects', 
+      label: 'Existing Projects', // Changed label
       path: '/browse-projects', 
       icon: '📚',
       requiresAuth: false
