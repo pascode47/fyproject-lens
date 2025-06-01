@@ -36,14 +36,14 @@ export class ProjectDetailComponent implements OnInit {
   fetchProjectDetails(id: string): void {
     this.isLoading = true;
     this.projectService.getProjectById(id).subscribe({
-      next: (response: any) => { // Use a more descriptive name like 'response'
-        console.log('Received API response:', response); 
-        // Assign the nested 'data' object to the component's project property
-        this.project = response.data; 
+      next: (projectDetails: Project) => { // Type response as Project
+        console.log('Received API response for project details:', projectDetails); 
+        // Assuming getProjectById returns the Project object directly
+        this.project = projectDetails; 
         this.isLoading = false;
         this.error = null;
       },
-      error: (err) => {
+      error: (err: any) => { // Explicitly type err
         console.error('Error fetching project details:', err);
         this.error = 'Failed to load project details. Please try again later.';
         // More specific error handling based on backend response

@@ -1,31 +1,45 @@
 .upload-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: var(--spacing-4); /* Use theme variable */
 }
 
 h2 {
-  color: #333;
+  color: var(--gray-900); /* Use theme variable */
   margin-bottom: 10px;
 }
 
 .upload-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin: 20px 0;
-  padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: var(--spacing-4); /* Use theme variable */
+  margin: var(--spacing-5) 0; /* Use theme variable */
+  padding: var(--spacing-5); /* Use theme variable */
+  background-color: var(--gray-100); /* Use theme variable */
+  border-radius: var(--border-radius-lg); /* Use theme variable */
+  box-shadow: var(--shadow-md); /* Use theme variable */
 }
 
+.button-group {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-3);
+}
+
+.upload-button,
+.clear-all-button {
+  /* Styles are now primarily from .btn, .btn-primary, .btn-outline-secondary */
+  /* Add any specific overrides if needed, e.g., for width or flex behavior */
+  flex-grow: 1; /* Example: make buttons share space */
+}
+
+
 .upload-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  /* padding: 10px 20px; */ /* Handled by .btn */
+  /* background-color: #007bff; */ /* Handled by .btn-primary */
+  /* color: white; */ /* Handled by .btn-primary */
+  /* border: none; */ /* Handled by .btn */
+  /* border-radius: 4px; */ /* Handled by .btn */
   cursor: pointer;
   font-weight: bold;
   /* .btn and .btn-primary from global styles.css will handle most of this.
@@ -77,53 +91,131 @@ h2 {
   margin: var(--spacing-3) 0; /* Using spacing variable */
 }
 
+.error-message.overall-error { /* Specific style for overall error if needed */
+  /* Example: make it more prominent */
+  /* font-weight: bold; */
+}
+
+.progress-message {
+  margin: var(--spacing-4) 0;
+  padding: var(--spacing-3);
+  background-color: var(--gray-100);
+  border-left: 4px solid var(--primary-color);
+  color: var(--gray-700);
+}
+
+.file-status-list {
+  margin-top: var(--spacing-6);
+}
+
+.file-status-list h3 {
+  margin-bottom: var(--spacing-4);
+  color: var(--gray-800);
+}
+
+.file-status-item {
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-4);
+  /* .card class is applied in HTML, so it gets base card styles */
+}
+
+.file-status-item h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-3);
+  font-size: var(--font-size-lg);
+  color: var(--secondary-color);
+  word-break: break-all;
+}
+
+.status-details p {
+  margin-bottom: var(--spacing-2);
+  font-weight: 500;
+}
+.status-pending { color: var(--gray-600); }
+.status-uploading { color: var(--primary-color); }
+.status-success { color: var(--success-color); }
+.status-error { color: var(--danger-color); }
+
+.spinner-inline { /* For status messages, smaller spinner */
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  border: 2px solid var(--primary-color-light, rgba(0, 123, 255, 0.3));
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.4em;
+  vertical-align: text-bottom; /* Align better with text */
+}
+
+
+.individual-result {
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--gray-200);
+}
+
+.individual-result h5 {
+  margin-bottom: var(--spacing-3);
+  font-size: var(--font-size-base);
+  color: var(--gray-700);
+  font-weight: 600;
+}
+
+
 .extracted-info, .similarity-results, .no-similarities {
-  margin-top: 30px;
-  padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* These were for single upload, now part of .individual-result */
+  /* margin-top: 30px; */ /* Handled by .individual-result */
+  /* padding: 20px; */ /* Handled by .individual-result or card padding */
+  /* background-color: white; */ /* Handled by .card */
+  /* border-radius: 8px; */ /* Handled by .card */
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */ /* Handled by .card */
 }
 
 .info-card {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 4px;
+  background-color: var(--gray-100); /* Use theme variable */
+  padding: var(--spacing-3); /* Use theme variable */
+  border-radius: var(--border-radius-sm); /* Use theme variable */
 }
 
 .info-item {
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-3); /* Use theme variable */
 }
 
 .info-item strong {
   display: block;
-  margin-bottom: 5px;
-  color: #495057;
+  margin-bottom: var(--spacing-1); /* Use theme variable */
+  color: var(--gray-700); /* Use theme variable */
 }
 
 .info-item p {
   margin: 0;
+  color: var(--gray-800); /* Use theme variable */
 }
 
 .info-item ul {
   margin: 0;
-  padding-left: 20px;
+  padding-left: var(--spacing-4); /* Use theme variable */
+  color: var(--gray-800); /* Use theme variable */
 }
 
 /* Grid layout for project cards */
 .results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  gap: var(--spacing-4); /* Use theme variable */
+  margin-top: var(--spacing-3); /* Use theme variable */
 }
 
-.result-card {
-  height: 100%;
+.result-card { /* This class was on the div wrapping app-project-card */
+  height: 100%; /* Good for grid alignment if cards have varying content */
 }
 
 @media (max-width: 768px) {
   .results-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Single column on smaller screens */
+  }
+  .button-group {
+    flex-direction: column;
   }
 }

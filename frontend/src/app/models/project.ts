@@ -12,4 +12,6 @@ export interface Project {
   extractedProblemStatement?: string; 
   extractedObjectives?: string[];
   filePath?: string; 
+  supervisor?: string; // Added for mock data consistency
+  students?: string[]; // Added for mock data consistency
 }

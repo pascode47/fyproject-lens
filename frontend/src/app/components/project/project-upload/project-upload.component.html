@@ -1,79 +1,104 @@
 <div class="upload-container">
-  <h2>Upload Your Project Proposal</h2>
-  <p>Upload your .docx file to check similarity with existing projects and get recommendations</p>
+  <h2>Upload Existing Projects (Admin)</h2>
+  <p>Select one or more .docx files to upload. They will be processed sequentially.</p>
 
   <div class="upload-form">
-    <!-- Using the shared file-upload component -->
     <app-file-upload 
-      label="Choose a .docx file" 
+      label="Choose .docx file(s)" 
       accept=".docx" 
-      [maxSizeMB]="10" 
-      (fileSelected)="onFileSelected($event)">
+      [maxSizeMB]="10"
+      [multiple]="true" 
+      (filesSelected)="onFilesSelected($event)">
     </app-file-upload>
 
-    <button (click)="uploadFile()" [disabled]="!file || isUploading" class="upload-button btn btn-primary">
-      <span *ngIf="!isUploading">Upload</span>
-      <span *ngIf="isUploading">
-        <span class="spinner"></span> Uploading...
-      </span>
-    </button>
-  </div>
-
-  <!-- Error message -->
-  <div *ngIf="uploadError" class="error-message">
-    {{ uploadError }}
-  </div>
-
-  <!-- Success message -->
-  <div *ngIf="uploadSuccess" class="success-message">
-    File uploaded successfully!
-  </div>
-
-  <!-- Extracted Information -->
-  <div *ngIf="extractedInfo && uploadSuccess" class="extracted-info">
-    <h3>Extracted Information</h3>
-    <div class="info-card">
-      <div class="info-item">
-        <strong>Title:</strong>
-        <p>{{ extractedInfo.title || 'Not available' }}</p>
-      </div>
-      <div class="info-item">
-        <strong>Problem Statement:</strong>
-        <p>{{ extractedInfo.problemStatement || 'Not available' }}</p>
-      </div>
-      <div class="info-item">
-        <strong>Objectives:</strong>
-        <ul>
-          <li *ngFor="let objective of extractedInfo.objectives">{{ objective }}</li>
-          <li *ngIf="!extractedInfo.objectives || extractedInfo.objectives.length === 0">No objectives found</li>
-        </ul>
-      </div>
+    <div class="button-group">
+      <button 
+        (click)="uploadAllFiles()" 
+        [disabled]="filesToUpload.length === 0 || isBulkUploading" 
+        class="upload-button btn btn-primary">
+        <span *ngIf="!isBulkUploading">Upload All Selected ({{ filesToUpload.length }})</span>
+        <span *ngIf="isBulkUploading">
+          <span class="spinner"></span> Uploading...
+        </span>
+      </button>
+      <button 
+        *ngIf="filesToUpload.length > 0 && !isBulkUploading"
+        (click)="clearAllFiles()"
+        class="clear-all-button btn btn-outline-secondary">
+        Clear Selection
+      </button>
     </div>
   </div>
 
-  <!-- Similarity Results -->
-  <div *ngIf="similarityResults && similarityResults.length > 0" class="similarity-results">
-    <h3>Similarity Results</h3>
-    <p>Your project proposal has similarities with the following existing projects:</p>
-    
-    <div class="results-grid">
-      <div *ngFor="let result of similarityResults" class="result-card">
-        <!-- Using the shared project-card component -->
-        <app-project-card
-          [id]="result.projectId"
-          [title]="result.projectTitle"
-          [year]="result.year"
-          [department]="result.department"
-          [similarityPercentage]="result.similarityPercentage"
-          [tags]="result.similarSections"
-          [showSimilarity]="true">
-        </app-project-card>
-      </div>
-    </div>
+  <!-- Overall error message -->
+  <div *ngIf="overallUploadError" class="error-message overall-error">
+    {{ overallUploadError }}
   </div>
 
-  <div *ngIf="uploadSuccess && (!similarityResults || similarityResults.length === 0)" class="no-similarities">
-    <h3>No Similarities Found</h3>
-    <p>Your project proposal appears to be unique! No significant similarities were found with existing projects.</p>
+  <!-- Overall progress message -->
+  <div *ngIf="isBulkUploading && filesToUpload.length > 0" class="progress-message">
+    <p>{{ overallProgress }}</p>
+  </div>
+
+  <!-- Individual File Statuses and Results -->
+  <div *ngIf="filesToUpload.length > 0" class="file-status-list">
+    <h3>Upload Status & Results:</h3>
+    <div *ngFor="let item of filesToUpload; let i = index" class="file-status-item card">
+      <h4>{{ i + 1 }}. {{ item.file.name }}</h4>
+      
+      <div [ngSwitch]="item.status" class="status-details">
+        <p *ngSwitchCase="'pending'" class="status-pending">Status: Pending</p>
+        <p *ngSwitchCase="'uploading'" class="status-uploading">
+          <span class="spinner-inline"></span> Status: Uploading...
+        </p>
+        <p *ngSwitchCase="'success'" class="status-success">Status: Uploaded Successfully!</p>
+        <p *ngSwitchCase="'error'" class="status-error">Status: Error - {{ item.errorMessage }}</p>
+      </div>
+
+      <ng-container *ngIf="item.status === 'success'">
+        <!-- Extracted Information for this file -->
+        <div *ngIf="item.extractedInfo" class="extracted-info individual-result">
+          <h5>Extracted Information:</h5>
+          <div class="info-card">
+            <div class="info-item">
+              <strong>Title:</strong>
+              <p>{{ item.extractedInfo.title || 'Not available' }}</p>
+            </div>
+            <div class="info-item">
+              <strong>Problem Statement:</strong>
+              <p>{{ item.extractedInfo.problemStatement || 'Not available' }}</p>
+            </div>
+            <div class="info-item">
+              <strong>Objectives:</strong>
+              <ul>
+                <li *ngFor="let objective of item.extractedInfo.objectives">{{ objective }}</li>
+                <li *ngIf="!item.extractedInfo.objectives || item.extractedInfo.objectives.length === 0">No objectives found</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Similarity Results for this file -->
+        <div *ngIf="item.similarityResults && item.similarityResults.length > 0" class="similarity-results individual-result">
+          <h5>Similarity Results:</h5>
+          <div class="results-grid">
+            <div *ngFor="let result of item.similarityResults" class="result-card">
+              <app-project-card
+                [id]="result.projectId"
+                [title]="result.projectTitle"
+                [year]="result.year"
+                [department]="result.department"
+                [similarityPercentage]="result.similarityPercentage"
+                [tags]="result.similarSections"
+                [showSimilarity]="true">
+              </app-project-card>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="item.similarityResults && item.similarityResults.length === 0" class="no-similarities individual-result">
+          <h5>No Similarities Found for this project.</h5>
+        </div>
+      </ng-container>
+    </div>
   </div>
 </div>

@@ -2,23 +2,34 @@
   <div class="file-input-wrapper">
     <input 
       type="file" 
-      id="file-upload" 
-      [accept]="accept" 
+      [id]="inputId"
+      [accept]="accept"
+      [attr.multiple]="multiple ? true : null"
       (change)="onFileChange($event)" 
       class="file-input"
     >
-    <label for="file-upload" class="file-label">
+    <label [for]="inputId" class="file-label">
       <span class="file-icon">📎</span>
       <span class="file-text">
-        <ng-container *ngIf="!file">{{ label }}</ng-container>
-        <ng-container *ngIf="file">{{ file.name }}</ng-container>
+        <ng-container *ngIf="selectedFiles.length === 0">{{ label }}</ng-container>
+        <ng-container *ngIf="selectedFiles.length === 1">{{ selectedFiles[0].name }}</ng-container>
+        <ng-container *ngIf="selectedFiles.length > 1">{{ selectedFiles.length }} files selected</ng-container>
       </span>
     </label>
   </div>
   
-  <div *ngIf="file" class="file-info">
-    <span class="file-size">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</span>
-    <button type="button" class="clear-button" (click)="clearFile()">✕</button>
+  <div *ngIf="selectedFiles.length > 0" class="file-info-wrapper">
+    <ul *ngIf="multiple && selectedFiles.length > 1" class="file-list">
+      <li *ngFor="let file of selectedFiles" class="file-info-item">
+        <span class="file-name">{{ file.name }}</span>
+        <span class="file-size">({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+      </li>
+    </ul>
+    <div *ngIf="selectedFiles.length === 1 && selectedFiles[0]" class="file-info-item single-file-info">
+      <!-- For single file, size might be shown differently or not at all if already in label -->
+       <span class="file-size">Size: {{ (selectedFiles[0].size / 1024 / 1024).toFixed(2) }} MB</span>
+    </div>
+    <button type="button" class="clear-button" (click)="clearFiles()">✕ Clear Selection</button>
   </div>
   
   <div *ngIf="error" class="file-error">

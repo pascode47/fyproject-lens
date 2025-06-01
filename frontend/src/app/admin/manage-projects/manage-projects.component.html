@@ -17,30 +17,53 @@
     </div>
     
     <div class="upload-form">
-      <div class="form-group">
-        <label for="projectFile">Select Project File</label>
-        <input 
-          type="file" 
-          id="projectFile" 
-          accept=".docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, .pdf, application/pdf" 
-          (change)="onProjectFileSelected($event)"
-          #projectFileInput 
-        />
-        <small class="form-hint">Allowed types: DOCX, PDF. Max size: 10MB.</small>
-      </div>
+      <app-file-upload
+        label="Select Project File(s) (.docx, .pdf)"
+        accept=".docx,.pdf,.doc,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+        [maxSizeMB]="10"
+        [multiple]="true"
+        (filesSelected)="onProjectFilesSelected($event)">
+      </app-file-upload>
       
-      <button 
-        (click)="uploadSingleProject()" 
-        [disabled]="!selectedProjectFile || isUploading" 
-        class="btn-primary"
-      >
-        <span *ngIf="!isUploading">Upload Project</span>
-        <span *ngIf="isUploading">Uploading... <span class="spinner"></span></span>
-      </button>
-      <!-- Optional: Add progress bar if implementing progress tracking -->
-      <!-- <progress *ngIf="isUploading" [value]="uploadProgress" max="100"></progress> -->
+      <div class="button-group mt-3"> <!-- Added button group for layout -->
+        <button 
+          (click)="uploadSelectedProjects()" 
+          [disabled]="selectedProjectFiles.length === 0 || isUploading" 
+          class="btn btn-primary"
+        >
+          <span *ngIf="!isUploading">Upload Selected ({{ selectedProjectFiles.length }})</span>
+          <span *ngIf="isUploading">Uploading... <span class="spinner"></span></span>
+        </button>
+        <button
+          *ngIf="selectedProjectFiles.length > 0 && !isUploading"
+          (click)="clearSelectedProjectFiles()"
+          class="btn btn-outline-secondary">
+          Clear Selection
+        </button>
+      </div>
+       <!-- Overall progress message -->
+      <div *ngIf="isUploading && selectedProjectFiles.length > 0" class="progress-message mt-3">
+        <p>{{ bulkUploadProgress }}</p>
+      </div>
     </div>
   </div>
+
+  <!-- Display area for individual file upload statuses -->
+  <div *ngIf="fileUploadStatuses.length > 0" class="admin-section file-status-list">
+    <h3>Upload Statuses:</h3>
+    <div *ngFor="let item of fileUploadStatuses; let i = index" class="file-status-item card">
+      <h4>{{ i + 1 }}. {{ item.file.name }}</h4>
+      <div [ngSwitch]="item.status" class="status-details">
+        <p *ngSwitchCase="'pending'" class="status-pending">Status: Pending</p>
+        <p *ngSwitchCase="'uploading'" class="status-uploading">
+          <span class="spinner-inline"></span> Status: Uploading...
+        </p>
+        <p *ngSwitchCase="'success'" class="status-success">Status: {{ item.successMessage || 'Uploaded Successfully!' }}</p>
+        <p *ngSwitchCase="'error'" class="status-error">Status: Error - {{ item.errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Section for Listing and Managing Projects -->
   <div class="admin-section">

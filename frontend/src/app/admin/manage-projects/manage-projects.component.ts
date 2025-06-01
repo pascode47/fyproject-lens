@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'; // Add OnDestroy
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core'; // Add OnDestroy, ViewChild
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../shared/services/admin.service';
@@ -6,11 +6,21 @@ import { Project } from '../../models/project';
 import { PaginatedResponse } from '../../models/paginated-response'; // Import PaginatedResponse
 import { Subject } from 'rxjs'; // Import Subject
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import operators
+import { FileUploadComponent } from '../../shared/components/file-upload/file-upload.component'; // Import FileUploadComponent
+
+// Interface for tracking bulk upload status
+interface AdminFileUploadStatus {
+  file: File;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  errorMessage?: string;
+  successMessage?: string;
+  // Add any other relevant fields from the upload response if needed
+}
 
 @Component({
   selector: 'app-manage-projects',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileUploadComponent], // Added FileUploadComponent
   templateUrl: './manage-projects.component.html',
   styleUrl: './manage-projects.component.css'
 })
@@ -29,15 +39,22 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
   departmentFilter: string = ''; // Changed from programmeFilter
   academicYearFilter: string = ''; 
 
-  // Single Project Upload
-  selectedProjectFile: File | null = null;
-  isUploading: boolean = false;
-  uploadProgress: number = 0; // Optional for progress bar
-  uploadSuccessMessage: string | null = null;
+  // Bulk Project Upload
+  selectedProjectFiles: File[] = [];
+  fileUploadStatuses: AdminFileUploadStatus[] = [];
+  isUploading: boolean = false; // Re-used for bulk operation
+  bulkUploadProgress: string = '';
+  currentBulkUploadIndex: number = -1;
+
+  // General messages for single/old upload logic (can be reused or adapted)
+  uploadSuccessMessage: string | null = null; 
   uploadErrorMessage: string | null = null;
+
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>(); // For unsubscribing
+
+  @ViewChild(FileUploadComponent) private fileUploadComponentRef!: FileUploadComponent;
 
   constructor(private adminService: AdminService) {}
   
@@ -104,63 +121,87 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
     this.loadProjects();
   }
 
-  // --- Single Project Upload Handlers ---
+  // --- Bulk Project Upload Handlers ---
 
-  onProjectFileSelected(event: Event): void {
-    const element = event.currentTarget as HTMLInputElement;
-    let fileList: FileList | null = element.files;
-
-    if (fileList && fileList.length > 0) {
-      const file = fileList[0];
-      // Validate file type (DOCX or PDF)
-      const allowedTypes = [
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-        'application/pdf'
-      ];
-      if (allowedTypes.includes(file.type)) {
-        this.selectedProjectFile = file;
-        this.uploadErrorMessage = null; // Clear previous error
-        this.uploadSuccessMessage = null;
-      } else {
-        this.selectedProjectFile = null;
-        this.uploadErrorMessage = 'Invalid file type. Please select a DOCX or PDF file.';
-        element.value = ''; // Clear the input
-      }
-    } else {
-       this.selectedProjectFile = null;
-    }
+  onProjectFilesSelected(files: File[]): void {
+    this.selectedProjectFiles = files;
+    this.fileUploadStatuses = files.map(file => ({
+      file,
+      status: 'pending'
+    }));
+    this.uploadErrorMessage = null; // Clear general error message
+    this.uploadSuccessMessage = null; // Clear general success message
   }
 
-  uploadSingleProject(): void {
-    if (!this.selectedProjectFile) {
-      this.uploadErrorMessage = 'Please select a project file (DOCX or PDF) to upload.';
+  async uploadSelectedProjects(): Promise<void> {
+    if (this.selectedProjectFiles.length === 0) {
+      this.uploadErrorMessage = 'Please select one or more project files to upload.';
       return;
     }
 
     this.isUploading = true;
     this.uploadErrorMessage = null;
     this.uploadSuccessMessage = null;
-    this.uploadProgress = 0; // Reset progress
+    this.currentBulkUploadIndex = 0;
 
-    this.adminService.uploadProject(this.selectedProjectFile)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.isUploading = false;
-          this.uploadSuccessMessage = `Project "${response.extractedInfo?.title || 'Unknown'}" uploaded successfully! (ID: ${response.projectId})`;
-          this.selectedProjectFile = null; 
-          // Optionally clear the file input visually if needed
-          // Reset and reload projects to see the new one
-          this.currentPage = 1; 
-          this.loadProjects(); 
-        },
-        error: (error) => {
-          this.isUploading = false;
-          this.uploadErrorMessage = error?.error?.message || 'An error occurred during upload.';
-          console.error('Error uploading project:', error);
-        }
-        // Add progress tracking here if using HttpClient reportProgress
-      });
+    for (let i = 0; i < this.fileUploadStatuses.length; i++) {
+      const currentFileStatus = this.fileUploadStatuses[i];
+      this.currentBulkUploadIndex = i;
+      this.updateBulkUploadProgress();
+
+      // Basic client-side validation (can be enhanced)
+      const allowedExtensions = ['.docx', '.pdf', '.doc'];
+      const fileExtension = '.' + currentFileStatus.file.name.split('.').pop()?.toLowerCase();
+      if (!allowedExtensions.includes(fileExtension)) {
+        currentFileStatus.status = 'error';
+        currentFileStatus.errorMessage = `Invalid file type: ${currentFileStatus.file.name}. Only DOCX, PDF, DOC allowed.`;
+        continue; // Skip to next file
+      }
+      
+      currentFileStatus.status = 'uploading';
+      try {
+        // Assuming adminService.uploadProject takes a single File and returns relevant info
+        // The actual response structure from adminService.uploadProject will determine what to store.
+        const response: any = await this.adminService.uploadProject(currentFileStatus.file).toPromise();
+        currentFileStatus.status = 'success';
+        currentFileStatus.successMessage = `Project "${response.extractedInfo?.title || currentFileStatus.file.name}" uploaded. ID: ${response.projectId}`;
+        // Optionally store more details from response onto currentFileStatus if needed
+      } catch (error: any) {
+        currentFileStatus.status = 'error';
+        currentFileStatus.errorMessage = error?.error?.message || error?.message || 'Upload failed.';
+        console.error(`Error uploading ${currentFileStatus.file.name}:`, error);
+      }
+    }
+
+    this.isUploading = false;
+    this.currentBulkUploadIndex = -1;
+    this.updateBulkUploadProgress(); // Final progress update
+    this.loadProjects(); // Refresh the project list
+    // Do not clear selectedProjectFiles here, user might want to see statuses
+  }
+  
+  clearSelectedProjectFiles(): void {
+    this.selectedProjectFiles = [];
+    this.fileUploadStatuses = [];
+    this.uploadErrorMessage = null;
+    this.uploadSuccessMessage = null;
+    this.isUploading = false;
+    this.currentBulkUploadIndex = -1;
+    this.bulkUploadProgress = '';
+    if (this.fileUploadComponentRef) {
+      this.fileUploadComponentRef.clearFiles();
+    }
+  }
+
+  private updateBulkUploadProgress(): void {
+    if (!this.isUploading || this.currentBulkUploadIndex < 0 || this.fileUploadStatuses.length === 0) {
+      this.bulkUploadProgress = '';
+      return;
+    }
+    const currentIndex = this.currentBulkUploadIndex + 1;
+    const totalFiles = this.fileUploadStatuses.length;
+    const currentFileName = this.fileUploadStatuses[this.currentBulkUploadIndex].file.name;
+    this.bulkUploadProgress = `Processing ${currentIndex} of ${totalFiles}: ${currentFileName}`;
   }
 
   // --- Delete Project Handler ---

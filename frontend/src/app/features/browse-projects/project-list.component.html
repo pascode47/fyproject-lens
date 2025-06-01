@@ -1,51 +1,52 @@
 <div class="browse-container">
   <h2>Browse Existing Projects</h2>
 
-  <!-- Error Message Display -->
   <div *ngIf="errorMessage" class="error-message">
     <p>{{ errorMessage }}</p>
-    <button (click)="resetFilters()">Try Again</button> 
+    <button (click)="resetFilters()">Try Again</button>
   </div>
 
-  <!-- Academic Year Selection -->
-  <div class="filter-section">
-    <h3>Select Academic Year</h3>
-    <div *ngIf="isLoadingYears" class="loading-indicator">Loading academic years...</div>
-    <div *ngIf="!isLoadingYears && academicYears.length === 0 && !errorMessage" class="no-data">
-      No academic years found.
+  <div class="filter-controls">
+    <div class="filter-group">
+      <label for="year-select">Academic Year:</label>
+      <select id="year-select" [(ngModel)]="selectedYear" (ngModelChange)="onYearSelected($event)" [disabled]="isLoadingYears">
+        <option *ngIf="isLoadingYears" [ngValue]="null" disabled>Loading years...</option>
+        <option *ngFor="let year of academicYears" [ngValue]="year">{{ year }}</option>
+      </select>
     </div>
-    <div *ngIf="!isLoadingYears && academicYears.length > 0" class="tile-grid">
-      <button 
-        *ngFor="let year of academicYears" 
-        class="tile year-tile"
-        [class.selected]="year === selectedYear"
-        (click)="onYearSelected(year)">
-        {{ year }}
-      </button>
+
+    <div class="filter-group">
+      <label for="department-select">Department:</label>
+      <select id="department-select" [(ngModel)]="selectedDepartment" (ngModelChange)="onDepartmentSelected($event)">
+        <option *ngFor="let dept of departments" [ngValue]="dept">{{ dept }}</option>
+      </select>
     </div>
+
+    <button (click)="resetFilters()" class="reset-button">Clear Filters</button>
   </div>
 
-  <!-- Course Selection Section Removed -->
-
-  <!-- Project List (Visible only after year selection) -->
-  <div *ngIf="selectedYear" class="project-list-section"> <!-- Changed condition to selectedYear -->
-    <h3>Projects for {{ selectedYear }}</h3> <!-- Updated header -->
+  <div class="project-list-section">
+    <h3>
+      Projects
+      <span *ngIf="selectedYear && selectedYear !== 'All Years'"> for {{ selectedYear }}</span>
+      <span *ngIf="selectedDepartment && selectedDepartment !== 'All Departments'"> in {{ selectedDepartment }}</span>
+    </h3>
     <div *ngIf="isLoadingProjects" class="loading-indicator">Loading projects...</div>
-    <div *ngIf="!isLoadingProjects && filteredProjects.length === 0 && !errorMessage" class="no-data">
-      No projects found for this selection.
+    <div *ngIf="!isLoadingProjects && projects.length === 0 && !errorMessage" class="no-data">
+      No projects found for the current filters.
     </div>
-    <div *ngIf="!isLoadingProjects && filteredProjects.length > 0" class="project-grid">
-      <!-- Assuming you have an app-project-card component -->
+    <div *ngIf="!isLoadingProjects && projects.length > 0" class="project-grid">
       <app-project-card 
-        *ngFor="let project of filteredProjects" 
-        [project]="project">
+        *ngFor="let project of projects" 
+        [project]="project"
+        [showSimilarity]="false">
       </app-project-card>
     </div>
   </div>
 
-  <!-- Optional Reset Button -->
-  <div *ngIf="selectedYear" class="reset-section"> <!-- Changed condition -->
-      <button (click)="resetFilters()" class="reset-button">Clear Filters</button>
+  <div *ngIf="!isLoadingProjects && projects.length > 0 && getTotalPages() > 0" class="pagination-controls">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+    <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === getTotalPages()">Next</button>
   </div>
-
 </div>

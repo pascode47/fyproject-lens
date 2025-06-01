@@ -336,7 +336,7 @@ Return JSON with:
 - supervisor (string) - If not found, use null.
 - students (array of strings) - If not found, use an empty array [].
 - academicYear (string, extract ONLY a single year in "YYYY" format, for example, "2023". If the text shows a range like "2022/23" or "2022-2023" or "2023/2024", extract ONLY the first year like "2022". do not upload multiple academic year(2023/24) , only single(2023)
-- department (string) - If not found, use null.
+- department (string) - Identify the most relevant department for this project from the following list. Respond with ONLY the exact name from the list: ['Department of Computer Science and Engineering (DoCS&E)', 'Department of Electronics and Telecommunications Engineering (ETE)', 'Department of Information Systems and Technology (DIS&T)']. If none of the listed departments are a clear match based on the project text, respond with the value 'Other'. If no department information can be inferred, use null.
 - problemStatement (string, <100 words) - If not found, use null.
 - objectives (array of strings. These should be specific, actionable project goals, usually starting with "To design...", "To develop...", "To implement...", "To investigate...", "To analyze...", "To test...". Look for a list under a heading like "Objectives" or "Project Objectives".) - If not found, use an empty array [].
 

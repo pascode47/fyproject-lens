@@ -45,20 +45,57 @@
   text-overflow: ellipsis;
 }
 
-.file-info {
+/* Renamed .file-info to .file-info-wrapper to avoid conflict if .file-info was used for single file before */
+.file-info-wrapper {
+  margin-top: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--gray-100, #e9ecef); /* Using variable */
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--spacing-2) 0; /* Add some margin below the list if clear button is separate */
+  max-height: 150px; /* Example max height for scrollable list */
+  overflow-y: auto;
+}
+
+.file-info-item {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  padding: 5px 10px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  align-items: center;
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--gray-200, #dee2e6);
+}
+
+.file-info-item:last-child {
+  border-bottom: none;
+}
+
+.file-name {
+  color: var(--gray-800, #343a40);
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: var(--spacing-2);
 }
 
 .file-size {
-  color: #495057;
+  color: var(--gray-600, #495057);
+  font-size: 0.9em; /* Slightly smaller */
+  white-space: nowrap;
 }
+
+.single-file-info { /* Styles for when only one file is selected and we show its size */
+  display: flex;
+  justify-content: space-between; /* Or just display size, adjust as needed */
+  align-items: center;
+  padding: var(--spacing-1) 0;
+}
+
 
 .clear-button {
   background: none;
@@ -76,8 +113,10 @@
 .file-error {
   margin-top: 8px;
   padding: 5px 10px;
-  background-color: #f8d7da;
-  color: #721c24;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  background-color: var(--danger-color-light, #f8d7da); /* Using variable */
+  color: var(--danger-color-dark, #721c24); /* Using variable */
+  border: 1px solid var(--danger-color, #e74c3c); /* Added border for consistency */
+  border-radius: var(--border-radius-sm); /* Using variable */
+  font-size: var(--font-size-sm); /* Using variable */
+  /* Ensure consistent padding with other messages if needed */
 }
