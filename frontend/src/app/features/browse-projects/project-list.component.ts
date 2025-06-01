@@ -1,22 +1,22 @@
+// frontend/src/app/features/browse-projects/project-list.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Ensure FormsModule is imported
-import { ProjectService, PaginatedProjectsResponse } from '../../shared/services/project.service'; // Import PaginatedProjectsResponse
+import { FormsModule } from '@angular/forms';
+import { ProjectService, PaginatedProjectsResponse } from '../../shared/services/project.service';
 import { Project } from '../../models/project';
 import { ProjectCardComponent } from '../../shared/project-card/project-card.component';
 
 @Component({
   selector: 'app-project-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProjectCardComponent], // FormsModule added
+  imports: [CommonModule, FormsModule, ProjectCardComponent],
   templateUrl: './project-list.component.html',
   styleUrls: ['./project-list.component.css']
 })
 export class ProjectListComponent implements OnInit {
-  // Explicitly type the injected service
   private projectService: ProjectService = inject(ProjectService);
 
-  projects: Project[] = []; // Renamed from filteredProjects
+  projects: Project[] = [];
   academicYears: string[] = [];
   departments: string[] = [
     'All Departments',
@@ -26,8 +26,8 @@ export class ProjectListComponent implements OnInit {
     'Other'
   ];
 
-  selectedYear: string | null = 'All Years'; // Default
-  selectedDepartment: string = 'All Departments'; // Default
+  selectedYear: string | null = 'All Years';
+  selectedDepartment: string = 'All Departments';
 
   currentPage: number = 1;
   itemsPerPage: number = 10;
@@ -41,24 +41,24 @@ export class ProjectListComponent implements OnInit {
     this.loadAcademicYears();
     this.loadProjects();
 
-    // Call the new diagnostic method
-    if (this.projectService.diagnosticTestMethod) {
-      const diagnosticResult = this.projectService.diagnosticTestMethod();
-      console.log('DIAGNOSTIC_COMPONENT_CALL:', diagnosticResult);
+    // Diagnostic call
+    if (typeof this.projectService.diagnosticTestMethod === 'function') {
+      const diagnosticMsg = this.projectService.diagnosticTestMethod();
+      console.log('DIAGNOSTIC_CALL_PROJECT_LIST:', diagnosticMsg);
     } else {
-      console.error('DIAGNOSTIC_COMPONENT_CALL: diagnosticTestMethod does NOT exist on projectService instance!');
+      console.error('DIAGNOSTIC_CALL_PROJECT_LIST: diagnosticTestMethod is NOT a function or does not exist on projectService.');
     }
   }
 
   loadAcademicYears(): void {
     this.isLoadingYears = true;
     this.errorMessage = null;
-    this.projectService.getAcademicYears().subscribe({ // Correct: 0 arguments
-      next: (years) => {
+    this.projectService.getAcademicYears().subscribe({
+      next: (years: string[]) => {
         this.academicYears = ['All Years', ...years.sort()];
         this.isLoadingYears = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading academic years:', err);
         this.errorMessage = 'Failed to load academic years.';
         this.isLoadingYears = false;
@@ -73,22 +73,26 @@ export class ProjectListComponent implements OnInit {
     const departmentFilter = this.selectedDepartment === 'All Departments' ? undefined : this.selectedDepartment;
     const yearFilter = this.selectedYear === 'All Years' || this.selectedYear === null ? undefined : this.selectedYear;
 
-    // This is line 68/69 where the TS2554 error was reported.
-    // The call signature matches ProjectService.fetchAllProjectsWithFilters.
-    this.projectService.fetchAllProjectsWithFilters(departmentFilter, this.currentPage, this.itemsPerPage, yearFilter).subscribe({
-      next: (response: PaginatedProjectsResponse) => { // Explicitly type response
-        this.projects = response.data || []; // Ensure projects is an array
-        this.totalItems = response.pagination?.totalItems || 0;
-        this.isLoadingProjects = false;
-      },
-      error: (err: any) => { // Explicitly type err
-        console.error('Error loading projects:', err);
-        this.projects = []; // Clear projects on error
-        this.totalItems = 0;
-        this.errorMessage = 'Failed to load projects. Please try again later.';
-        this.isLoadingProjects = false;
-      }
-    });
+    if (typeof this.projectService.fetchAllProjectsWithFilters === 'function') {
+      this.projectService.fetchAllProjectsWithFilters(departmentFilter, this.currentPage, this.itemsPerPage, yearFilter).subscribe({
+        next: (response: PaginatedProjectsResponse) => {
+          this.projects = response.data || [];
+          this.totalItems = response.pagination?.totalItems || 0;
+          this.isLoadingProjects = false;
+        },
+        error: (err: any) => {
+          console.error('Error loading projects:', err);
+          this.projects = [];
+          this.totalItems = 0;
+          this.errorMessage = 'Failed to load projects. Please try again later.';
+          this.isLoadingProjects = false;
+        }
+      });
+    } else {
+      console.error('CRITICAL_ERROR: projectService.fetchAllProjectsWithFilters is NOT a function or does not exist!');
+      this.errorMessage = 'Critical error: Project fetching service is misconfigured.';
+      this.isLoadingProjects = false;
+    }
   }
 
   onYearSelected(year: string | null): void {
