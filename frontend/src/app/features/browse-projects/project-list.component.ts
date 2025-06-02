@@ -2,7 +2,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProjectService, PaginatedProjectsResponse } from '../../shared/services/project.service';
+import { ProjectService, PaginatedProjectsResponse } from '../../services/project.service';
 import { Project } from '../../models/project';
 import { ProjectCardComponent } from '../../shared/project-card/project-card.component';
 
