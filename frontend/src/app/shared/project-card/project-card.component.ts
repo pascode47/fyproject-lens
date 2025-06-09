@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { Project } from '../../models/project'; // Import Project model
 
 @Component({
@@ -16,6 +16,22 @@ export class ProjectCardComponent {
   // as they might not be part of the base Project model fetched for browsing.
   @Input() similarityPercentage?: number; 
   @Input() showSimilarity: boolean = false;
+  
+  constructor(private router: Router) {}
+  
+  logProjectId(): void {
+    console.log('Project ID:', this.project._id);
+    console.log('Full project object:', this.project);
+  }
+  
+  navigateToDetails(): void {
+    console.log('Navigating to project details with ID:', this.project._id);
+    if (this.project && this.project._id) {
+      this.router.navigate(['/projects', this.project._id]);
+    } else {
+      console.error('Cannot navigate: Project ID is missing', this.project);
+    }
+  }
 
   getSimilarityClass(): string {
     // Use only the dedicated input property for similarity percentage

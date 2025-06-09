@@ -34,8 +34,8 @@
   <div class="card-footer">
     <!-- Link to a generic project detail page, or similarity if appropriate -->
     <!-- Assuming project._id is the identifier -->
-    <a [routerLink]="['/projects', project._id]" class="view-button"> 
+    <button class="view-button" (click)="navigateToDetails()"> 
       View Details 
-    </a>
+    </button>
   </div>
 </div>

@@ -1,19 +1,38 @@
-import { Component, EventEmitter, Output, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, OnDestroy, ChangeDetectorRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { filter } from 'rxjs/operators';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    MatSidenavModule, 
+    MatListModule, 
+    MatIconModule, 
+    MatButtonModule,
+    MatDividerModule
+  ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   @Output() sidebarToggled = new EventEmitter<boolean>();
+  @Input() isDrawerOpen = false;
   
   isCollapsed = false;
+  isAdminRoute = false;
+  
+  // Admin-specific navigation items
+  adminMenuItems: any[] = [];
 
   allMenuItems = [
     { 
@@ -96,6 +115,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   constructor(
     public authService: AuthService,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
   
@@ -107,6 +127,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
       console.log('Auth state changed, updating menu items');
       this.updateMenuItems();
       // Trigger change detection to update the view
+      this.cdr.detectChanges();
+    });
+    
+    // Listen for route changes to detect admin routes
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      const currentUrl = this.router.url;
+      this.isAdminRoute = currentUrl.includes('/admin');
+      this.updateMenuItems();
       this.cdr.detectChanges();
     });
   }
@@ -122,24 +152,42 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const isAuthenticated = this.authService.isAuthenticated();
     const isAdmin = this.authService.isAdmin();
     
-    // Filter main menu items
-    this.menuItems = this.allMenuItems.filter(item => {
-      // Skip items that require authentication when user is not authenticated
-      if (item.requiresAuth && !isAuthenticated) {
-        return false;
-      }
+    if (this.isAdminRoute && isAdmin) {
+      // When in admin routes, show only admin-specific items
+      this.adminMenuItems = this.allMenuItems.filter(item => 
+        item.requiresAdmin && item.path.includes('/admin/')
+      );
       
-      // Skip items that require admin when user is not admin
-      if (item.requiresAdmin && !isAdmin) {
-        return false;
-      }
+      // For regular menu items, show non-admin items
+      this.menuItems = this.allMenuItems.filter(item => 
+        !item.requiresAdmin && 
+        (!item.requiresAuth || isAuthenticated)
+      );
+    } else {
+      // For non-admin routes, show regular navigation
+      this.adminMenuItems = [];
       
-      return true;
-    });
+      // Filter main menu items
+      this.menuItems = this.allMenuItems.filter(item => {
+        // Skip items that require authentication when user is not authenticated
+        if (item.requiresAuth && !isAuthenticated) {
+          return false;
+        }
+        
+        // In non-admin routes, skip admin sub-pages but keep the main admin link
+        if (item.requiresAdmin && item.path.includes('/admin/')) {
+          return false;
+        }
+        
+        return true;
+      });
+    }
   }
   
   toggleSidebar() {
-    this.isCollapsed = !this.isCollapsed;
-    this.sidebarToggled.emit(this.isCollapsed);
+    // Close the drawer
+    this.isDrawerOpen = false;
+    // Emit an event to notify the parent component that the drawer is closed
+    this.sidebarToggled.emit(false);
   }
 }

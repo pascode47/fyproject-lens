@@ -10,6 +10,7 @@ import { AuthInterceptor } from './core/auth.interceptor'; // Import the interce
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +22,9 @@ export const appConfig: ApplicationConfig = {
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     
     // Configure HttpClient to use fetch and to be aware of interceptors provided via DI
-    provideHttpClient(withFetch(), withInterceptorsFromDi())
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
+    
+    // Provide animations for Angular Material
+    provideAnimations()
   ]
 };

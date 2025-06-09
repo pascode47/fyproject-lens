@@ -1,48 +1,105 @@
 <!-- sidebar.component.html -->
-<div class="sidebar" [class.collapsed]="isCollapsed">
-  <div class="sidebar-header">
-    <div class="sidebar-logo">
-      <span class="logo-icon">📚</span>
-      <span class="logo-text" *ngIf="!isCollapsed">FYProject Lens</span>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav 
+    #drawer 
+    class="sidenav" 
+    [mode]="'over'"
+    [opened]="isDrawerOpen"
+    [fixedInViewport]="true"
+    [fixedTopGap]="64">
+    
+    <div class="sidenav-header">
+      <h2 class="sidenav-title">{{ isAdminRoute ? 'Admin Panel' : 'Navigation' }}</h2>
+      <button mat-icon-button aria-label="Close sidebar" (click)="toggleSidebar()">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
-    <button class="collapse-btn" (click)="toggleSidebar()">
-      <span *ngIf="!isCollapsed">◀</span>
-      <span *ngIf="isCollapsed">▶</span>
-    </button>
-  </div>
-
-  <div class="sidebar-content">
-    <nav class="sidebar-nav">
-      <ul class="nav-list">
-        <li class="nav-item" *ngFor="let item of menuItems">
-          <a 
-            [routerLink]="[item.path]" 
-            routerLinkActive="active"
-            class="nav-link"
-            [title]="item.label">
-            <span class="nav-icon">{{item.icon}}</span>
-            <span class="nav-label" *ngIf="!isCollapsed">{{item.label}}</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-  </div>
-
-  <div class="sidebar-footer" *ngIf="!isCollapsed">
-    <div class="user-info" *ngIf="authService.isAuthenticated()">
-      <div class="user-avatar">👤</div>
-      <div class="user-details">
-        <div class="user-name">{{ authService.getCurrentUser()?.name || 'User' }}</div>
-        <div class="user-role">{{ authService.isAdmin() ? 'Admin' : 'Student' }}</div>
+    
+    <mat-divider></mat-divider>
+    
+    <!-- Admin Navigation Section (shown only in admin routes) -->
+    @if (isAdminRoute && adminMenuItems.length > 0) {
+      <div class="section-header">
+        <h3 class="section-title">Admin Tools</h3>
       </div>
+      
+      <mat-nav-list class="sidenav-list admin-nav-list">
+        @for (item of adminMenuItems; track item.path) {
+          <a mat-list-item 
+             [routerLink]="[item.path]" 
+             routerLinkActive="active-link"
+             class="nav-item admin-nav-item">
+            <mat-icon class="nav-icon">
+              {{ 
+                item.icon === '📊' ? 'analytics' : 
+                item.icon === '👥' ? 'people' : 
+                item.icon === '📂' ? 'folder' : 
+                'settings'
+              }}
+            </mat-icon>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+      
+      <mat-divider></mat-divider>
+    }
+    
+    <!-- Regular Navigation Section -->
+    <div class="section-header">
+      <h3 class="section-title">{{ isAdminRoute ? 'Main Navigation' : 'Menu' }}</h3>
     </div>
-    <div class="auth-buttons" *ngIf="!authService.isAuthenticated()">
-      <a *ngFor="let item of authMenuItems" 
-         [routerLink]="[item.path]" 
-         class="auth-link">
-        <span class="auth-icon">{{item.icon}}</span>
-        <span class="auth-label">{{item.label}}</span>
-      </a>
+    
+    <mat-nav-list class="sidenav-list">
+      @for (item of menuItems; track item.path) {
+        <a mat-list-item 
+           [routerLink]="[item.path]" 
+           routerLinkActive="active-link"
+           class="nav-item">
+          <mat-icon class="nav-icon">
+            {{ 
+              item.icon === '🏠' ? 'home' : 
+              item.icon === '🔍' ? 'find_in_page' : 
+              item.icon === '📚' ? 'library_books' : 
+              item.icon === '💡' ? 'lightbulb' : 
+              item.icon === '👤' ? 'person' : 
+              item.icon === '⚙️' ? 'settings' : 
+              'circle'
+            }}
+          </mat-icon>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+    
+    <mat-divider></mat-divider>
+    
+    <div class="sidenav-footer">
+      @if (authService.isAuthenticated()) {
+        <div class="user-info">
+          <mat-icon class="user-avatar">account_circle</mat-icon>
+          <div class="user-details">
+            <div class="user-name">{{ authService.getCurrentUser()?.name || 'User' }}</div>
+            <div class="user-role">{{ authService.isAdmin() ? 'Admin' : 'Student' }}</div>
+          </div>
+        </div>
+      } @else {
+        <div class="auth-buttons">
+          @for (item of authMenuItems; track item.path) {
+            <a mat-stroked-button 
+               [routerLink]="[item.path]" 
+               class="auth-button">
+              <mat-icon>{{ item.icon === '🔑' ? 'login' : 'person_add' }}</mat-icon>
+              <span>{{ item.label }}</span>
+            </a>
+          }
+        </div>
+      }
     </div>
-  </div>
-</div>
+    
+  </mat-sidenav>
+  
+  <mat-sidenav-content>
+    <!-- This is intentionally empty as the content is rendered in the app.component.html -->
+  </mat-sidenav-content>
+</mat-sidenav-container>

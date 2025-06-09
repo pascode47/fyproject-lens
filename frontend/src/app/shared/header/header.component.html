@@ -1,87 +1,136 @@
 <!-- header.component.html -->
-<header class="header">
+<mat-toolbar color="primary" class="header">
   <div class="header-content">
     <!-- Mobile Menu Toggle (visible only on mobile) -->
-    <button class="mobile-toggle" (click)="toggleMobileMenu()">
-      @if (isMobileMenuOpen) {
-        <span class="toggle-icon">✕</span>
-      } @else {
-        <span class="toggle-icon">☰</span>
-      }
+    <button mat-icon-button class="mobile-toggle" (click)="toggleMobileMenu()">
+      <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
     </button>
 
-    <!-- Page Title -->
-    <h1 class="page-title">{{ getCurrentPageTitle() }}</h1>
+    <!-- Logo/Brand -->
+    <div class="brand">
+      <span class="brand-text">FYProject Lens</span>
+    </div>
+
+    <!-- Navigation Tabs (visible on desktop) -->
+    <div class="nav-tabs-container">
+      <mat-tab-group [selectedIndex]="activeTabIndex" (selectedIndexChange)="onTabClick($event)" mat-align-tabs="center">
+        @for (item of visibleNavItems; track item.path) {
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">{{ item.icon }}</mat-icon>
+              <span class="tab-label">{{ item.label }}</span>
+            </ng-template>
+          </mat-tab>
+        }
+      </mat-tab-group>
+    </div>
 
     <!-- Right Side Actions -->
     <div class="header-actions">
+      <!-- Quick Action Button -->
+      <button mat-button color="accent" class="action-button check-proposal-btn" [routerLink]="['/check-proposal']">
+        <mat-icon>find_in_page</mat-icon>
+        <span>Check Proposal</span>
+      </button>
+      
       <!-- Search Bar -->
       <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search projects...">
-        <button class="search-button">🔍</button>
+        <mat-form-field appearance="outline">
+          <mat-label>Search projects</mat-label>
+          <input 
+            matInput 
+            [(ngModel)]="searchQuery" 
+            placeholder="Search projects..." 
+            (keyup.enter)="onSearch()"
+          >
+          <button 
+            mat-icon-button 
+            matSuffix 
+            (click)="onSearch()" 
+            [disabled]="!searchQuery.trim()"
+            aria-label="Search"
+          >
+            <mat-icon>search</mat-icon>
+          </button>
+        </mat-form-field>
       </div>
 
       <!-- Notification Icon -->
-      <button class="action-button notification-button">
-        <span class="action-icon">🔔</span>
-        <span class="notification-badge">3</span>
+      <button mat-icon-button class="action-button">
+        <mat-icon [matBadge]="3" matBadgeColor="warn">notifications</mat-icon>
       </button>
 
       <!-- User Menu -->
-      <div class="user-menu">
-        <button class="user-button" (click)="toggleUserMenu()">
-          <span class="user-avatar">👤</span>
-        </button>
-        @if (isUserMenuOpen) {
-          <div class="user-dropdown">
-            @if (authService.isAuthenticated()) {
-              <div class="dropdown-header">
-                <span class="user-name">{{ getUserName() }}</span>
-                <span class="user-email">{{ getUserEmail() }}</span>
-              </div>
-              <div class="dropdown-divider"></div>
-              <a [routerLink]="['/profile']" class="dropdown-item" (click)="toggleUserMenu()">
-                <span class="item-icon">👤</span>
-                <span class="item-text">Profile</span>
-              </a>
-              @if (authService.isAdmin()) {
-                <a [routerLink]="['/admin']" class="dropdown-item" (click)="toggleUserMenu()">
-                  <span class="item-icon">⚙️</span>
-                  <span class="item-text">Admin Dashboard</span>
-                </a>
-              }
-              <div class="dropdown-divider"></div>
-              <a (click)="logout()" class="dropdown-item">
-                <span class="item-icon">🚪</span>
-                <span class="item-text">Logout</span>
-              </a>
-            } @else {
-              @for (item of authMenuItems; track item.path) {
-                <a [routerLink]="[item.path]" class="dropdown-item" (click)="toggleUserMenu()">
-                  <span class="item-icon">{{item.icon}}</span>
-                  <span class="item-text">{{item.label}}</span>
-                </a>
-              }
-            }
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-button">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      
+      <mat-menu #userMenu="matMenu" xPosition="before" class="user-menu-panel">
+        @if (authService.isAuthenticated()) {
+          <div class="user-menu-header">
+            <span class="user-name">{{ getUserName() }}</span>
+            <span class="user-email">{{ getUserEmail() }}</span>
           </div>
+          <mat-divider></mat-divider>
+          <a mat-menu-item [routerLink]="['/profile']">
+            <mat-icon>person</mat-icon>
+            <span>Profile</span>
+          </a>
+          @if (authService.isAdmin()) {
+            <a mat-menu-item [routerLink]="['/admin']">
+              <mat-icon>settings</mat-icon>
+              <span>Admin Dashboard</span>
+            </a>
+          }
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>exit_to_app</mat-icon>
+            <span>Logout</span>
+          </button>
+        } @else {
+          @for (item of authMenuItems; track item.path) {
+            <a mat-menu-item [routerLink]="[item.path]">
+              <mat-icon>{{ item.icon === '🔑' ? 'login' : 'person_add' }}</mat-icon>
+              <span>{{ item.label }}</span>
+            </a>
+          }
         }
-      </div>
+      </mat-menu>
     </div>
   </div>
+</mat-toolbar>
 
-  <!-- Mobile Menu (visible only when toggled) -->
-  @if (isMobileMenuOpen) {
-    <div class="mobile-menu">
-      @for (item of menuItems; track item.path) {
-        <a 
-          [routerLink]="[item.path]"
-          routerLinkActive="active"
-          class="mobile-link"
-          (click)="toggleMobileMenu()">
-          <span class="nav-icon">{{item.icon}}</span>
-          <span class="nav-label">{{item.label}}</span>
-        </a>
-      }
-    </div>
-  }
-</header>
+<!-- Mobile Menu (visible only when toggled) -->
+@if (isMobileMenuOpen) {
+  <div class="mobile-menu mat-elevation-z2">
+    @for (item of menuItems; track item.path) {
+      <a 
+        mat-button
+        [routerLink]="[item.path]"
+        [routerLinkActive]="'active-link'"
+        [routerLinkActiveOptions]="{exact: item.path === '/home'}"
+        class="mobile-link"
+        (click)="toggleMobileMenu()">
+        <mat-icon>
+          {{ 
+            item.icon === '🏠' ? 'home' : 
+            item.icon === '📄' ? 'upload_file' : 
+            item.icon === '📚' ? 'library_books' : 
+            item.icon === '💡' ? 'lightbulb' : 
+            item.icon === '👤' ? 'person' : 
+            item.icon === '⚙️' ? 'settings' : 'circle'
+          }}
+        </mat-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+    
+    <!-- Special case for project detail pages in mobile menu -->
+    @if (isProjectDetailPage()) {
+      <div class="mobile-current-page">
+        <mat-icon>description</mat-icon>
+        <span>Project Details</span>
+      </div>
+    }
+  </div>
+}

@@ -7,80 +7,46 @@
 
 app-header {
   width: 100%;
-  position: sticky; /* Or fixed, depending on desired scroll behavior */
+  position: sticky;
   top: 0;
-  z-index: 1000; /* Ensure header is above other content */
+  z-index: 1000;
 }
 
 .page-content-wrapper {
   display: flex;
-  flex: 1; /* Allows this wrapper to grow and fill available space */
-  position: relative; /* For potential absolute positioning of children if needed */
+  flex: 1;
+  position: relative;
 }
 
 app-sidebar {
-  /* Sidebar width is typically controlled within its own component or via CSS variables */
-  /* Example: width: var(--sidebar-width); */
-  /* Ensure it doesn't shrink: */
-  flex-shrink: 0;
-  height: calc(100vh - var(--header-height, 60px)); /* Adjust header-height as needed */
-  position: sticky;
-  top: var(--header-height, 60px); /* Align below the header */
-  overflow-y: auto; /* Allow sidebar to scroll if content exceeds its height */
+  position: fixed;
+  top: var(--header-height, 64px);
+  left: 0;
+  height: calc(100vh - var(--header-height, 64px));
+  z-index: 999;
 }
 
 .main-content {
-  flex: 1; /* Main content takes remaining width */
-  /* margin-left is handled by the presence/absence of sidebar and its width */
-  transition: margin-left var(--transition-normal) ease;
-  min-height: calc(100vh - var(--header-height, 60px)); /* Adjust header-height */
+  flex: 1;
+  min-height: calc(100vh - var(--header-height, 64px));
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* Allow main content to scroll */
+  overflow-y: auto;
+  width: 100%;
 }
-
-.main-content.full-width {
-  margin-left: 0 !important; /* Override any margin when sidebar is not present */
-}
-
-/* Adjust margin when sidebar is present and not collapsed */
-:host ::ng-deep .page-content-wrapper:not(.sidebar-collapsed) app-sidebar + .main-content {
-  margin-left: var(--sidebar-width, 250px); /* Default sidebar width */
-}
-
-/* Adjust margin when sidebar is present and collapsed */
-:host ::ng-deep .page-content-wrapper.sidebar-collapsed app-sidebar + .main-content {
-  margin-left: var(--sidebar-collapsed-width, 70px); /* Default collapsed sidebar width */
-}
-
 
 .content-container {
   flex: 1;
-  padding: var(--spacing-4, 1.5rem); /* Ensure var has a fallback */
-  background-color: var(--gray-100, #f8f9fa); /* Ensure var has a fallback */
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* Responsive Design */
-@media (max-width: 992px) {
-  /* On smaller screens, sidebar might overlay or be hidden by default.
-     The current setup will have the sidebar push content.
-     If an overlay effect is desired, sidebar positioning would need to change to absolute/fixed.
-  */
-  :host ::ng-deep .page-content-wrapper:not(.sidebar-collapsed) app-sidebar + .main-content,
-  :host ::ng-deep .page-content-wrapper.sidebar-collapsed app-sidebar + .main-content {
-    margin-left: 0; /* Sidebar might be hidden or overlaying on mobile */
-  }
-
-  app-sidebar {
-    /* Example: For mobile, you might want the sidebar to be absolutely positioned
-       and toggled with a button, or to take full width.
-       The current styles will keep it in flow.
-    */
-    /* position: fixed; */
-    /* left: -var(--sidebar-width); */
-    /* transition: left 0.3s ease-in-out; */
-    /* &.open { left: 0; } */
-    height: calc(100vh - var(--header-height, 60px));
-    top: var(--header-height, 60px);
+/* Add some responsive padding to the content container */
+@media (max-width: 768px) {
+  .content-container {
+    padding: 1rem;
   }
 }

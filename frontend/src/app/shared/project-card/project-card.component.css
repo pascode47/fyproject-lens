@@ -136,12 +136,19 @@
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: 500;
+  border: none;
+  cursor: pointer;
   transition: background-color var(--transition-fast) ease, transform var(--transition-fast) ease;
 }
 
 .view-button:hover {
   background-color: var(--primary-dark);
   transform: translateY(-2px);
+}
+
+.view-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
 /* Add a subtle hover effect */

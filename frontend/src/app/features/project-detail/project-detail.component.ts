@@ -24,13 +24,19 @@ export class ProjectDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.projectId = this.route.snapshot.paramMap.get('id');
-    if (this.projectId) {
-      this.fetchProjectDetails(this.projectId);
-    } else {
-      this.error = 'Project ID not found in URL.';
-      this.isLoading = false;
-    }
+    // Subscribe to route params to handle navigation between different project details
+    this.route.paramMap.subscribe(params => {
+      this.projectId = params.get('id');
+      console.log('Project detail component initialized with ID:', this.projectId);
+      
+      if (this.projectId) {
+        this.fetchProjectDetails(this.projectId);
+      } else {
+        this.error = 'Project ID not found in URL.';
+        this.isLoading = false;
+        console.error('No project ID found in route parameters');
+      }
+    });
   }
 
   fetchProjectDetails(id: string): void {
@@ -38,19 +44,43 @@ export class ProjectDetailComponent implements OnInit {
     this.projectService.getProjectById(id).subscribe({
       next: (projectDetails: Project) => { // Type response as Project
         console.log('Received API response for project details:', projectDetails); 
-        // Assuming getProjectById returns the Project object directly
-        this.project = projectDetails; 
+        
+        if (!projectDetails || !projectDetails._id) {
+          this.error = 'Invalid project data received from server.';
+          this.project = null;
+        } else {
+          this.project = projectDetails;
+          this.error = null;
+          
+          // Log successful project load for debugging
+          console.log('Project details loaded successfully:', {
+            id: projectDetails._id,
+            title: projectDetails.title,
+            year: projectDetails.academicYear,
+            department: projectDetails.department
+          });
+        }
+        
         this.isLoading = false;
-        this.error = null;
       },
       error: (err: any) => { // Explicitly type err
         console.error('Error fetching project details:', err);
-        this.error = 'Failed to load project details. Please try again later.';
-        // More specific error handling based on backend response
+        
+        // More specific error handling based on error type
         if (err.status === 404) {
-          this.error = 'Project not found.';
+          this.error = 'Project not found. The project may have been removed or you may not have permission to view it.';
+        } else if (err.status === 403) {
+          this.error = 'You do not have permission to view this project.';
+        } else if (err.status === 401) {
+          this.error = 'Authentication required. Please log in to view this project.';
+        } else if (err.message && typeof err.message === 'string') {
+          this.error = err.message;
+        } else {
+          this.error = 'Failed to load project details. Please try again later.';
         }
+        
         this.isLoading = false;
+        this.project = null;
       }
     });
   }

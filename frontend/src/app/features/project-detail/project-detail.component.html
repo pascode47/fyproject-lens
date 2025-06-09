@@ -1,10 +1,16 @@
 <div class="project-detail-container">
   <div *ngIf="isLoading" class="loading-indicator">
-    Loading project details...
+    <div class="spinner"></div>
+    <p>Loading project details...</p>
   </div>
 
   <div *ngIf="error" class="error-message">
-    {{ error }}
+    <div class="error-icon">⚠️</div>
+    <div class="error-content">
+      <h3>Error</h3>
+      <p>{{ error }}</p>
+      <button class="back-button" routerLink="/browse-projects">Back to Projects</button>
+    </div>
   </div>
 
   <div *ngIf="project && !isLoading && !error" class="project-content">
@@ -45,9 +51,17 @@
       </p>
       <!-- Alternatively, embed viewer here if implementing that -->
     </div>
+    
+    <div class="navigation-buttons">
+      <button class="back-button" routerLink="/browse-projects">
+        <span class="back-icon">←</span> Back to Projects
+      </button>
+    </div>
   </div>
 
   <div *ngIf="!project && !isLoading && !error" class="no-project">
+    <div class="no-data-icon">📂</div>
     <p>Project data could not be loaded.</p>
+    <button class="back-button" routerLink="/browse-projects">Back to Projects</button>
   </div>
 </div>

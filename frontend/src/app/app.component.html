@@ -1,7 +1,10 @@
-<app-header></app-header>
-<div class="page-content-wrapper" [class.sidebar-collapsed]="sidebarCollapsed">
-  <app-sidebar *ngIf="isUserLoggedIn" (sidebarToggled)="onSidebarToggle($event)"></app-sidebar>
-  <main class="main-content" [class.full-width]="!isUserLoggedIn">
+<app-header (toggleDrawer)="toggleDrawer()"></app-header>
+<div class="page-content-wrapper">
+  <app-sidebar 
+    [isDrawerOpen]="isDrawerOpen" 
+    (sidebarToggled)="onSidebarToggle($event)">
+  </app-sidebar>
+  <main class="main-content">
     <div class="content-container">
       <router-outlet></router-outlet>
     </div>

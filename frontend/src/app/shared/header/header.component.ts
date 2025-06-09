@@ -1,14 +1,37 @@
 // header.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatTabsModule } from '@angular/material/tabs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule, 
+    RouterModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatBadgeModule,
+    MatDividerModule,
+    MatTabsModule,
+    FormsModule
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
@@ -16,6 +39,45 @@ export class HeaderComponent implements OnInit {
   isMobileMenuOpen = false;
   isUserMenuOpen = false;
   currentPageTitle = 'Dashboard';
+  activeTabIndex = 0;
+  searchQuery: string = '';
+  
+  // Primary navigation items for tabs
+  primaryNavItems = [
+    { 
+      label: 'Home', 
+      path: '/home', 
+      icon: 'home'
+    },
+    { 
+      label: 'Browse Projects', 
+      path: '/browse-projects', 
+      icon: 'library_books'
+    },
+    { 
+      label: 'Popular Ideas', 
+      path: '/popular-ideas', 
+      icon: 'lightbulb'
+    }
+  ];
+  
+  // Add admin tab if user is admin
+  get visibleNavItems() {
+    const items = [...this.primaryNavItems];
+    
+    // Add Admin tab for admin users
+    if (this.authService.isAdmin()) {
+      items.push({
+        label: 'Admin',
+        path: '/admin',
+        icon: 'admin_panel_settings'
+      });
+    }
+    
+    return items;
+  }
+  
+  @Output() toggleDrawer = new EventEmitter<void>();
 
   allMenuItems = [
     { 
@@ -77,6 +139,7 @@ export class HeaderComponent implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updatePageTitle();
+      this.updateActiveTab();
     });
   }
   
@@ -117,12 +180,24 @@ export class HeaderComponent implements OnInit {
     this.authService.logout();
     this.router.navigate(['/auth/login']);
   }
+  
+  onSearch(): void {
+    if (this.searchQuery.trim()) {
+      this.router.navigate(['/browse-projects'], { 
+        queryParams: { search: this.searchQuery.trim() } 
+      });
+      this.searchQuery = ''; // Clear the search input after searching
+    }
+  }
 
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
     if (this.isMobileMenuOpen) {
       this.isUserMenuOpen = false;
     }
+    
+    // Emit an event to toggle the drawer
+    this.toggleDrawer.emit();
   }
 
   toggleUserMenu() {
@@ -134,6 +209,49 @@ export class HeaderComponent implements OnInit {
 
   getCurrentPageTitle(): string {
     return this.currentPageTitle;
+  }
+  
+  // Navigate when tab is clicked
+  onTabClick(index: number) {
+    const navItem = this.visibleNavItems[index];
+    this.router.navigate([navItem.path]);
+    
+    // If clicking on the Admin tab, also toggle the drawer
+    if (navItem.path === '/admin') {
+      this.toggleDrawer.emit();
+    }
+  }
+  
+  // Update active tab based on current route
+  updateActiveTab() {
+    const currentUrl = this.router.url;
+    
+    // Check if we're in an admin route
+    if (currentUrl.includes('/admin')) {
+      // Find the admin tab index
+      const adminIndex = this.visibleNavItems.findIndex(item => item.path === '/admin');
+      if (adminIndex >= 0) {
+        this.activeTabIndex = adminIndex;
+        return;
+      }
+    }
+    
+    // Special case for project detail pages - highlight the Browse Projects tab
+    if (currentUrl.includes('/projects/')) {
+      const browseProjectsIndex = this.visibleNavItems.findIndex(item => item.path === '/browse-projects');
+      if (browseProjectsIndex >= 0) {
+        this.activeTabIndex = browseProjectsIndex;
+        return;
+      }
+    }
+    
+    // For other routes, find the matching tab
+    const index = this.visibleNavItems.findIndex(item => 
+      currentUrl.includes(item.path) || 
+      (item.path === '/home' && currentUrl === '/')
+    );
+    
+    this.activeTabIndex = index >= 0 ? index : 0;
   }
 
   private updatePageTitle() {
@@ -149,6 +267,8 @@ export class HeaderComponent implements OnInit {
       this.currentPageTitle = 'Popular Ideas';
     } else if (currentUrl.includes('/project/similarity')) {
       this.currentPageTitle = 'Similarity Results';
+    } else if (currentUrl.includes('/projects/')) {
+      this.currentPageTitle = 'Project Details';
     } else if (currentUrl.includes('/profile')) {
       this.currentPageTitle = 'Profile';
     } else if (currentUrl.includes('/auth/login')) {
@@ -160,5 +280,10 @@ export class HeaderComponent implements OnInit {
     } else {
       this.currentPageTitle = 'FYProject Lens';
     }
+  }
+  
+  // Helper method to check if current page is a project detail page
+  isProjectDetailPage(): boolean {
+    return this.router.url.includes('/projects/');
   }
 }

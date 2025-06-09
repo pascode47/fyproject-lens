@@ -2,6 +2,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectService, PaginatedProjectsResponse } from '../../services/project.service';
 import { Project } from '../../models/project';
 import { ProjectCardComponent } from '../../shared/project-card/project-card.component';
@@ -15,6 +16,8 @@ import { ProjectCardComponent } from '../../shared/project-card/project-card.com
 })
 export class ProjectListComponent implements OnInit {
   private projectService: ProjectService = inject(ProjectService);
+  private route: ActivatedRoute = inject(ActivatedRoute);
+  private router: Router = inject(Router);
 
   projects: Project[] = [];
   academicYears: string[] = [];
@@ -28,6 +31,7 @@ export class ProjectListComponent implements OnInit {
 
   selectedYear: string | null = 'All Years';
   selectedDepartment: string = 'All Departments';
+  searchQuery: string = '';
 
   currentPage: number = 1;
   itemsPerPage: number = 10;
@@ -39,7 +43,14 @@ export class ProjectListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAcademicYears();
-    this.loadProjects();
+    
+    // Check for search query parameter
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchQuery = params['search'];
+      }
+      this.loadProjects();
+    });
 
     // Diagnostic call
     if (typeof this.projectService.diagnosticTestMethod === 'function') {
@@ -72,13 +83,36 @@ export class ProjectListComponent implements OnInit {
     
     const departmentFilter = this.selectedDepartment === 'All Departments' ? undefined : this.selectedDepartment;
     const yearFilter = this.selectedYear === 'All Years' || this.selectedYear === null ? undefined : this.selectedYear;
+    const searchFilter = this.searchQuery.trim() || undefined;
+
+    console.log(`Loading projects: page=${this.currentPage}, limit=${this.itemsPerPage}, department=${departmentFilter}, year=${yearFilter}, search=${searchFilter}`);
 
     if (typeof this.projectService.fetchAllProjectsWithFilters === 'function') {
-      this.projectService.fetchAllProjectsWithFilters(departmentFilter, this.currentPage, this.itemsPerPage, yearFilter).subscribe({
+      this.projectService.fetchAllProjectsWithFilters(departmentFilter, this.currentPage, this.itemsPerPage, yearFilter, searchFilter).subscribe({
         next: (response: PaginatedProjectsResponse) => {
           this.projects = response.data || [];
-          this.totalItems = response.pagination?.totalItems || 0;
+          
+          // Ensure we're getting the correct total items count from the API
+          if (response.pagination) {
+            this.totalItems = response.pagination.totalItems || 0;
+            this.currentPage = response.pagination.currentPage || this.currentPage;
+            this.itemsPerPage = response.pagination.itemsPerPage || this.itemsPerPage;
+          } else {
+            this.totalItems = 0;
+          }
+          
           this.isLoadingProjects = false;
+          
+          // Log pagination info for debugging
+          console.log('Projects loaded:', {
+            count: this.projects.length,
+            pagination: response.pagination,
+            totalItems: this.totalItems,
+            totalPages: this.getTotalPages()
+          });
+          
+          // Call debug method
+          this.logPaginationState();
         },
         error: (err: any) => {
           console.error('Error loading projects:', err);
@@ -108,18 +142,55 @@ export class ProjectListComponent implements OnInit {
   }
   
   onPageChange(page: number): void {
-    if (page < 1 || page > this.getTotalPages()) {
+    if (page < 1 || (this.getTotalPages() > 0 && page > this.getTotalPages())) {
       return;
     }
-    this.currentPage = page;
+    
+    // Only reload if the page actually changed
+    if (this.currentPage !== page) {
+      this.currentPage = page;
+      this.loadProjects();
+      
+      // Scroll to top of project list when page changes
+      setTimeout(() => {
+        const projectListSection = document.querySelector('.project-list-section');
+        if (projectListSection) {
+          projectListSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }
+
+  onSearch(): void {
+    // Reset to first page when searching
+    this.currentPage = 1;
+    
+    // Update URL with search query parameter
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { search: this.searchQuery.trim() || null },
+      queryParamsHandling: 'merge'
+    });
+    
     this.loadProjects();
   }
 
   resetFilters(): void {
+    // Only reset if filters are not already at default values
+    const needsReset = this.selectedYear !== 'All Years' || 
+                       this.selectedDepartment !== 'All Departments' || 
+                       this.searchQuery !== '' ||
+                       this.currentPage !== 1;
+    
     this.selectedYear = 'All Years';
     this.selectedDepartment = 'All Departments';
+    this.searchQuery = '';
     this.currentPage = 1;
-    this.loadProjects();
+    
+    if (needsReset) {
+      this.loadProjects();
+    }
+    
     this.errorMessage = null;
   }
 
@@ -127,6 +198,18 @@ export class ProjectListComponent implements OnInit {
     if (this.totalItems === 0 || this.itemsPerPage === 0) {
       return 0;
     }
-    return Math.ceil(this.totalItems / this.itemsPerPage);
+    const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+    return totalPages;
+  }
+  
+  // Debug method to log pagination state
+  logPaginationState(): void {
+    console.log('Pagination State:', {
+      currentPage: this.currentPage,
+      itemsPerPage: this.itemsPerPage,
+      totalItems: this.totalItems,
+      totalPages: this.getTotalPages(),
+      projectsCount: this.projects.length
+    });
   }
 }

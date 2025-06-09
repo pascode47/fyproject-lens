@@ -7,6 +7,22 @@
   </div>
 
   <div class="filter-controls">
+    <div class="search-group">
+      <label for="search-input">Search:</label>
+      <div class="search-input-container">
+        <input 
+          type="text" 
+          id="search-input" 
+          [(ngModel)]="searchQuery" 
+          placeholder="Search by title, problem statement, objectives..."
+          (keyup.enter)="onSearch()"
+        >
+        <button class="search-button" (click)="onSearch()">
+          <span class="material-icons">search</span>
+        </button>
+      </div>
+    </div>
+
     <div class="filter-group">
       <label for="year-select">Academic Year:</label>
       <select id="year-select" [(ngModel)]="selectedYear" (ngModelChange)="onYearSelected($event)" [disabled]="isLoadingYears">
@@ -30,10 +46,12 @@
       Projects
       <span *ngIf="selectedYear && selectedYear !== 'All Years'"> for {{ selectedYear }}</span>
       <span *ngIf="selectedDepartment && selectedDepartment !== 'All Departments'"> in {{ selectedDepartment }}</span>
+      <span *ngIf="!isLoadingProjects && totalItems > 0" class="project-count">({{ totalItems }} total)</span>
     </h3>
     <div *ngIf="isLoadingProjects" class="loading-indicator">Loading projects...</div>
     <div *ngIf="!isLoadingProjects && projects.length === 0 && !errorMessage" class="no-data">
-      No projects found for the current filters.
+      <p>No projects found for the current filters.</p>
+      <button (click)="resetFilters()" class="reset-button">Clear Filters</button>
     </div>
     <div *ngIf="!isLoadingProjects && projects.length > 0" class="project-grid">
       <app-project-card 
@@ -44,9 +62,24 @@
     </div>
   </div>
 
-  <div *ngIf="!isLoadingProjects && projects.length > 0 && getTotalPages() > 0" class="pagination-controls">
-    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
-    <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
-    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === getTotalPages()">Next</button>
+  <div *ngIf="!isLoadingProjects && totalItems > 0" class="pagination-controls">
+    <button (click)="onPageChange(1)" [disabled]="currentPage === 1" class="pagination-button">
+      <span class="material-icons">first_page</span>
+    </button>
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1" class="pagination-button">
+      <span class="material-icons">chevron_left</span>
+    </button>
+    
+    <div class="pagination-info">
+      <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
+      <span class="pagination-total">({{ totalItems }} total projects)</span>
+    </div>
+    
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === getTotalPages()" class="pagination-button">
+      <span class="material-icons">chevron_right</span>
+    </button>
+    <button (click)="onPageChange(getTotalPages())" [disabled]="currentPage === getTotalPages()" class="pagination-button">
+      <span class="material-icons">last_page</span>
+    </button>
   </div>
 </div>

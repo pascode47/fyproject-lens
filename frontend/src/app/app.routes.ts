@@ -26,7 +26,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard] 
   },
   { path: 'project/similarity/:id', component: SimilarityResultsComponent, canActivate: [AuthGuard] },
-  { path: 'projects/:id', component: ProjectDetailComponent, canActivate: [AuthGuard] }, // Add the new route
+  { 
+    path: 'projects/:id', 
+    component: ProjectDetailComponent, 
+    canActivate: [AuthGuard],
+    // Add data property to indicate this is a detail page
+    data: { title: 'Project Details' }
+  },
   { path: 'popular-ideas', component: RecommendationListComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   

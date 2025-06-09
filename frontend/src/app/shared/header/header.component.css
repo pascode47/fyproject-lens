@@ -1,43 +1,80 @@
 /* header.component.css */
 .header {
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
+  padding: 0;
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
-  height: var(--header-height);
+  width: 100%;
+  padding: 0 1rem;
+  height: var(--header-height, 64px);
+}
+
+/* Brand/Logo */
+.brand {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.brand-text {
+  font-size: 1.25rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Navigation Tabs */
+.nav-tabs-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tab-icon {
+  margin-right: 8px;
+}
+
+/* Style the Material tabs */
+::ng-deep .mat-mdc-tab-header {
+  --mdc-tab-indicator-active-indicator-color: white;
+  --mat-tab-header-active-label-text-color: white;
+  --mat-tab-header-active-ripple-color: rgba(255, 255, 255, 0.1);
+  --mat-tab-header-inactive-ripple-color: rgba(255, 255, 255, 0.05);
+  --mat-tab-header-active-focus-label-text-color: white;
+  --mat-tab-header-active-hover-label-text-color: white;
+  --mat-tab-header-inactive-label-text-color: rgba(255, 255, 255, 0.7);
+  --mat-tab-header-inactive-focus-label-text-color: rgba(255, 255, 255, 0.7);
+  --mat-tab-header-inactive-hover-label-text-color: rgba(255, 255, 255, 0.9);
+}
+
+::ng-deep .mat-mdc-tab-label-container {
+  padding: 0 16px;
+}
+
+/* Quick Action Button */
+.check-proposal-btn {
+  margin-right: 16px;
+  white-space: nowrap;
 }
 
 /* Mobile Toggle Button */
 .mobile-toggle {
   display: none;
-  background: none;
-  border: none;
-  color: var(--gray-700);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.5rem;
   margin-right: 1rem;
-}
-
-.toggle-icon {
-  display: inline-block;
-  transition: transform 0.3s ease;
 }
 
 /* Page Title */
 .page-title {
   font-size: 1.5rem;
-  color: var(--gray-800);
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Header Actions */
@@ -49,227 +86,131 @@
 
 /* Search Container */
 .search-container {
-  position: relative;
   width: 300px;
+  margin: 0 16px;
 }
 
-.search-input {
+.search-container .mat-mdc-form-field {
   width: 100%;
-  padding: 0.5rem 2.5rem 0.5rem 1rem;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--border-radius-full);
-  font-size: 0.9rem;
-  transition: all var(--transition-fast) ease;
+  font-size: 14px;
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+/* Override Material styles for the search input */
+.search-container .mat-mdc-form-field-infix {
+  padding: 0.5em 0;
 }
 
-.search-button {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--gray-500);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 0.25rem;
+.search-container .mat-mdc-text-field-wrapper {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Action Buttons */
-.action-button {
-  background: none;
-  border: none;
-  color: var(--gray-700);
-  cursor: pointer;
-  width: 40px;
+.search-container .mat-mdc-form-field-flex {
+  padding: 0 0.5em;
+}
+
+/* Make the form field more compact */
+::ng-deep .search-container .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+::ng-deep .search-container .mat-mdc-text-field-wrapper {
   height: 40px;
-  border-radius: var(--border-radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: background-color var(--transition-fast) ease;
 }
 
-.action-button:hover {
-  background-color: var(--gray-200);
-}
-
-.action-icon {
-  font-size: 1.25rem;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: var(--danger-color);
-  color: white;
-  font-size: 0.7rem;
-  font-weight: bold;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--border-radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* User Menu */
-.user-menu {
-  position: relative;
-}
-
-.user-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  width: 40px;
+::ng-deep .search-container .mat-mdc-form-field-flex {
   height: 40px;
-  border-radius: var(--border-radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color var(--transition-fast) ease;
 }
 
-.user-button:hover {
-  background-color: var(--gray-200);
-}
-
-.user-avatar {
-  font-size: 1.25rem;
-}
-
-.user-dropdown {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-lg);
-  width: 250px;
-  z-index: 1000;
-  overflow: hidden;
-  animation: fadeIn var(--transition-fast) ease;
-}
-
-.dropdown-header {
-  padding: 1rem;
-  background-color: var(--gray-100);
+/* User Menu Styling */
+.user-menu-header {
+  padding: 16px;
   display: flex;
   flex-direction: column;
+  min-width: 200px;
 }
 
 .user-name {
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-bottom: 0.25rem;
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .user-email {
-  font-size: 0.85rem;
-  color: var(--gray-600);
-}
-
-.dropdown-divider {
-  height: 1px;
-  background-color: var(--gray-200);
-  margin: 0;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  color: var(--gray-700);
-  text-decoration: none;
-  transition: background-color var(--transition-fast) ease;
-  gap: 0.75rem;
-}
-
-.dropdown-item:hover {
-  background-color: var(--gray-100);
-}
-
-.item-icon {
-  font-size: 1.1rem;
-  color: var(--gray-600);
-}
-
-.item-text {
-  font-size: 0.9rem;
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 /* Mobile Menu */
 .mobile-menu {
-  display: none;
-  padding: 1rem;
   background-color: white;
-  border-top: 1px solid var(--gray-200);
+  padding: 1rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .mobile-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--gray-700);
-  text-decoration: none;
+  width: 100%;
+  justify-content: flex-start;
   padding: 0.75rem 1rem;
-  border-radius: var(--border-radius);
-  transition: background-color var(--transition-fast) ease;
-  margin-bottom: 0.5rem;
+  text-align: left;
 }
 
-.mobile-link:hover {
-  background-color: var(--gray-100);
+.mobile-link.active-link {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: var(--primary-color);
 }
 
-.mobile-link.active {
-  background-color: var(--primary-color);
-  color: white;
+.mobile-current-page {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: rgba(0, 0, 0, 0.04);
+  color: var(--primary-color);
+  border-left: 3px solid var(--primary-color);
+  font-weight: 500;
 }
+
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .search-container {
+    width: 200px;
+  }
+  
+  .check-proposal-btn span {
+    display: none;
+  }
+}
+
 @media (max-width: 992px) {
   .mobile-toggle {
     display: block;
   }
   
-  .search-container {
-    width: 200px;
+  .nav-tabs-container {
+    display: none;
+  }
+  
+  .brand {
+    flex: 1;
+    justify-content: center;
   }
 }
 
 @media (max-width: 768px) {
-  .header-content {
-    padding: 0.75rem 1rem;
-  }
-  
-  .page-title {
-    font-size: 1.25rem;
-  }
-  
   .search-container {
     display: none;
   }
   
   .mobile-menu {
     display: flex;
-    flex-direction: column;
     animation: slideDown 0.3s ease-out;
   }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 @keyframes slideDown {
