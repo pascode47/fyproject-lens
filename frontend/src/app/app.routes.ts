@@ -5,7 +5,7 @@ import { HomeComponent } from "./features/home/home.component";
 import { ProjectListComponent } from "./features/browse-projects/project-list.component";
 // import { ProjectUploadComponent } from "./features/upload-analysis/project-upload.component"; // Removed
 import { SimilarityResultsComponent } from "./features/upload-analysis/similarity-results.component";
-import { RecommendationListComponent } from "./features/popular-ideas/recommendation-list.component";
+import { RecommendationsComponent } from "./components/recommendations/recommendations.component";
 import { ProfileComponent } from "./features/profile/profile.component";
 import { ProjectDetailComponent } from "./features/project-detail/project-detail.component";
 import { SimilarityHistoryComponent } from "./features/similarity-history/similarity-history.component";
@@ -34,7 +34,7 @@ export const routes: Routes = [
     // Add data property to indicate this is a detail page
     data: { title: 'Project Details' }
   },
-  { path: 'popular-ideas', component: RecommendationListComponent, canActivate: [AuthGuard] },
+  { path: 'popular-ideas', component: RecommendationsComponent },
   { path: 'similarity-history', component: SimilarityHistoryComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   

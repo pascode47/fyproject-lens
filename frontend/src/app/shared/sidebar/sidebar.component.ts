@@ -60,9 +60,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
       requiresAuth: false
     },
     { 
-      label: 'Popular Ideas', 
+      label: 'Project Ideas', 
       path: '/popular-ideas', 
-      icon: '💡',
+      icon: '🚀',
       requiresAuth: false
     },
     {

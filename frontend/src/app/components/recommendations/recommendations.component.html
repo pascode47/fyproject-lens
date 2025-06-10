@@ -1,1 +1,80 @@
-<p>recommendations works!</p>
+<div class="container">
+  <h1 class="title">Project Ideas</h1>
+  <p class="subtitle">Explore project ideas in different technology fields to inspire your next creation</p>
+
+  <!-- Category Tiles -->
+  <div class="categories-grid">
+    <div class="category-tile" 
+         *ngFor="let category of categories" 
+         [style.background-color]="category.color"
+         [class.selected]="isSelectedCategory(category.name)"
+         (click)="toggleCategory(category.name)">
+      <i class="fas" [ngClass]="category.icon"></i>
+      <h3>{{ category.displayName }}</h3>
+    </div>
+  </div>
+
+  <!-- Difficulty Filter -->
+  <div class="filters">
+    <div class="filter-group">
+      <label for="difficulty">Difficulty:</label>
+      <select id="difficulty" [(ngModel)]="selectedDifficulty" (change)="onFilterChange()">
+        <option value="all">All Levels</option>
+        <option *ngFor="let difficulty of difficulties" [value]="difficulty.id">
+          {{ difficulty.name }}
+        </option>
+      </select>
+    </div>
+    
+    <button class="clear-filters" *ngIf="selectedCategories.length > 0" (click)="clearCategoryFilters()">
+      Clear Filters
+    </button>
+  </div>
+
+  <div class="loading-spinner" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading ideas...</p>
+  </div>
+
+  <div class="selected-categories" *ngIf="!isLoading && selectedCategories.length > 0">
+    <div class="category-tag" 
+         *ngFor="let categoryName of selectedCategories"
+         [style.background-color]="getCategoryInfo(categoryName).color">
+      <i class="fas" [ngClass]="getCategoryInfo(categoryName).icon"></i>
+      <span>{{ getCategoryInfo(categoryName).displayName }}</span>
+      <button class="remove-category" (click)="removeCategory(categoryName)">×</button>
+    </div>
+  </div>
+
+  <div class="ideas-grid" *ngIf="!isLoading && ideas.length > 0">
+    <div class="idea-card" *ngFor="let idea of ideas">
+      <h3 class="idea-title">{{ idea.title }}</h3>
+      <div class="idea-difficulty" [ngClass]="idea.difficulty">
+        {{ idea.difficulty | titlecase }}
+      </div>
+      <p class="idea-description">{{ idea.description }}</p>
+      
+      <div class="idea-tags">
+        <span class="tag" *ngFor="let tag of idea.tags">{{ tag }}</span>
+      </div>
+      
+      <div class="idea-resources" *ngIf="idea.resources && idea.resources.length > 0">
+        <h4>Resources:</h4>
+        <ul>
+          <li *ngFor="let resource of idea.resources">
+            <a [href]="resource.url" target="_blank" rel="noopener noreferrer">
+              <span class="resource-type">{{ resource.type | titlecase }}</span>
+              {{ resource.title }}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="no-ideas" *ngIf="!isLoading && ideas.length === 0">
+    <p>No ideas found for the selected category and difficulty level.</p>
+    <button (click)="fetchIdeas()">Try Again</button>
+  </div>
+
+</div>
