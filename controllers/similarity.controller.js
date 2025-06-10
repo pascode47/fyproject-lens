@@ -90,9 +90,14 @@ exports.checkProposalSimilarity = async (req, res, next) => {
       // Continue with potentially incomplete local data
     }
 
-    // Validate essential fields for comparison (title, problem statement, objectives)
-    if (!proposalMetadata.title && !proposalMetadata.problemStatement && (!proposalMetadata.objectives || proposalMetadata.objectives.length === 0)) {
-        return response.error(res, 'Could not extract sufficient information (title, problem statement, or objectives) from the proposal for comparison.', 400);
+    // Validate essential fields for comparison using the new validation function
+    const validationResult = fileProcessor.validateMetadata(proposalMetadata);
+    if (!validationResult.isValid) {
+        return response.error(
+            res, 
+            `The uploaded document is missing required information: ${validationResult.missingFields.join(', ')}. Please ensure your proposal includes these sections and try again.`, 
+            422 // Unprocessable Entity - the file was valid but the content doesn't meet requirements
+        );
     }
     
     // 3. Generate temporary embeddings for the proposal
@@ -145,32 +150,77 @@ exports.checkProposalSimilarity = async (req, res, next) => {
     proposalSimilarityResults.sort((a, b) => b.similarityPercentage - a.similarityPercentage);
     
     const topSimilarForDisplay = proposalSimilarityResults.slice(0, 2); // Changed to display top 2
-    // Adjust what's passed to recommendations if its input structure relied on 'title' and 'academicYear'
-    // For now, let's assume generateRecommendations can handle 'projectTitle' and 'year' or we adapt it later.
-    // The objects in topSimilarForRecommendations will now have projectTitle and year.
-    const topSimilarForRecommendations = proposalSimilarityResults.slice(0, 3).map(p => ({
-        // Re-map to the structure expected by generateRecommendations if it's different
-        // Assuming generateRecommendations expects title, problemStatement, objectives, similarityPercentage
-        title: p.projectTitle, // Map back for recommendation prompt
-        problemStatement: p.problemStatement,
-        objectives: p.objectives,
-        similarityPercentage: p.similarityPercentage
-    }));
+    
+    // 6. Fetch complete project data for the top similar projects
+    const topSimilarProjectIds = proposalSimilarityResults.slice(0, 3).map(p => p.projectId);
+    let topSimilarProjectsComplete = [];
+    
+    if (topSimilarProjectIds.length > 0) {
+      // Fetch complete project data for each similar project
+      topSimilarProjectsComplete = await Promise.all(
+        topSimilarProjectIds.map(async (projectId) => {
+          const project = await Project.findById(projectId);
+          if (!project) return null;
+          
+          // Find the similarity percentage from our results
+          const similarityResult = proposalSimilarityResults.find(p => p.projectId.toString() === projectId.toString());
+          const similarityPercentage = similarityResult ? similarityResult.similarityPercentage : 0;
+          
+          return {
+            title: project.title,
+            problemStatement: project.problemStatement || "",
+            objectives: project.objectives || [],
+            department: project.department || "",
+            academicYear: project.academicYear || "",
+            similarityPercentage: similarityPercentage
+          };
+        })
+      );
+      
+      // Filter out any null results (in case a project wasn't found)
+      topSimilarProjectsComplete = topSimilarProjectsComplete.filter(p => p !== null);
+    }
 
-
-    // 6. Generate recommendations
+    // 7. Generate recommendations
     let recommendationsList = [];
-    if (topSimilarForRecommendations.length > 0) {
+    if (topSimilarProjectsComplete.length > 0) {
         recommendationsList = await recommendations.generateRecommendations(
         { // Data for the "user project" (which is the uploaded proposal)
           title: proposalMetadata.title || "Uploaded Proposal",
           problemStatement: proposalMetadata.problemStatement || "",
-          objectives: proposalMetadata.objectives || []
+          objectives: proposalMetadata.objectives || [],
+          department: proposalMetadata.department || ""
         },
-        topSimilarForRecommendations // Pass the re-mapped top N similar existing projects
+        topSimilarProjectsComplete // Pass the complete project data
       );
     } else {
         recommendationsList = ["No significantly similar projects found to base recommendations on."];
+    }
+    
+    // 8. Store the analysis results if user is authenticated
+    if (req.user && req.user.id) {
+      try {
+        // Calculate highest similarity percentage
+        const highestSimilarity = proposalSimilarityResults.length > 0 
+          ? proposalSimilarityResults[0].similarityPercentage 
+          : 0;
+        
+        // Create analysis record
+        await Analysis.create({
+          userId: req.user.id,
+          proposalDetails: proposalMetadata,
+          similarProjects: topSimilarForDisplay,
+          similarityPercentage: highestSimilarity,
+          recommendations: recommendationsList,
+          analysisType: 'proposal',
+          timestamp: new Date()
+        });
+        
+        console.log(`Stored proposal check analysis for user ${req.user.id}`);
+      } catch (analysisError) {
+        console.error('Error storing proposal check analysis:', analysisError);
+        // Continue with the response even if storing fails
+      }
     }
     
     return response.success(
@@ -294,27 +344,35 @@ exports.analyzeSimilarity = async (req, res, next) => {
     // Sort results by similarity percentage
     similarityResults.sort((a, b) => b.similarityPercentage - a.similarityPercentage);
     
-    // Get top similar projects for recommendations
+    // Get top similar projects for recommendations with complete data
     const topSimilarProjects = await Promise.all(
       similarityResults.slice(0, 3).map(async (result) => {
         const similarProject = await Project.findById(result.comparedProjectId);
+        if (!similarProject) return null;
+        
         return {
           title: similarProject.title,
-          problemStatement: similarProject.problemStatement,
-          objectives: similarProject.objectives,
+          problemStatement: similarProject.problemStatement || "",
+          objectives: similarProject.objectives || [],
+          department: similarProject.department || "",
+          academicYear: similarProject.academicYear || "",
           similarityPercentage: result.similarityPercentage
         };
       })
     );
     
-    // Generate recommendations
+    // Filter out any null results (in case a project wasn't found)
+    const filteredTopSimilarProjects = topSimilarProjects.filter(p => p !== null);
+    
+    // Generate recommendations with more complete data
     const recommendationsList = await recommendations.generateRecommendations(
       {
         title: project.title,
-        problemStatement: project.problemStatement,
-        objectives: project.objectives
+        problemStatement: project.problemStatement || "",
+        objectives: project.objectives || [],
+        department: project.department || ""
       },
-      topSimilarProjects
+      filteredTopSimilarProjects
     );
     
     // Create analysis record
@@ -323,6 +381,7 @@ exports.analyzeSimilarity = async (req, res, next) => {
       projectId: project._id,
       similarityPercentage: highestSimilarity,
       recommendations: recommendationsList,
+      analysisType: 'project', // Explicitly set the analysis type
       timestamp: new Date()
     });
     
@@ -366,6 +425,85 @@ exports.getRecommendations = async (req, res, next) => {
       res,
       'Recommendations retrieved successfully',
       { recommendations: analysis.recommendations }
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get user's similarity history (both project analyses and proposal checks)
+ * @route GET /api/similarity/history
+ * @access Private
+ */
+exports.getUserSimilarityHistory = async (req, res, next) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user || !req.user.id) {
+      return response.error(res, 'Authentication required', 401);
+    }
+    
+    // Get query parameters for filtering
+    const { startDate, endDate, type } = req.query;
+    
+    // Build query
+    const query = { userId: req.user.id };
+    
+    // Add date range filter if provided
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) {
+        query.timestamp.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.timestamp.$lte = new Date(endDate);
+      }
+    }
+    
+    // Add type filter if provided
+    if (type && ['project', 'proposal'].includes(type)) {
+      query.analysisType = type;
+    }
+    
+    // Get analyses sorted by timestamp (newest first)
+    const analyses = await Analysis.find(query)
+      .sort({ timestamp: -1 })
+      .populate('projectId', 'title department academicYear') // Populate project details if available
+      .limit(50); // Limit to 50 most recent analyses
+    
+    // Format response
+    const formattedAnalyses = analyses.map(analysis => {
+      const result = {
+        id: analysis._id,
+        timestamp: analysis.timestamp,
+        similarityPercentage: analysis.similarityPercentage,
+        recommendations: analysis.recommendations,
+        analysisType: analysis.analysisType
+      };
+      
+      // Add project details if this is a project analysis
+      if (analysis.analysisType === 'project' && analysis.projectId) {
+        result.project = {
+          id: analysis.projectId._id,
+          title: analysis.projectId.title,
+          department: analysis.projectId.department,
+          academicYear: analysis.projectId.academicYear
+        };
+      }
+      
+      // Add proposal details if this is a proposal check
+      if (analysis.analysisType === 'proposal' && analysis.proposalDetails) {
+        result.proposalDetails = analysis.proposalDetails;
+        result.similarProjects = analysis.similarProjects;
+      }
+      
+      return result;
+    });
+    
+    return response.success(
+      res,
+      'Similarity history retrieved successfully',
+      { history: formattedAnalyses }
     );
   } catch (error) {
     next(error);

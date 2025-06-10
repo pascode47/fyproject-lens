@@ -20,7 +20,20 @@
     </button>
 
     <div *ngIf="processingError" class="error-message">
-      {{ processingError }}
+      <div class="error-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div class="error-content">
+        <h4>Error Processing Document</h4>
+        <p>{{ processingError }}</p>
+        <div *ngIf="processingError.includes('missing required information')" class="error-help">
+          <p><strong>Your document should include:</strong></p>
+          <ul>
+            <li>A clear title for your project</li>
+            <li>A problem statement section explaining the issue your project addresses</li>
+            <li>Specific objectives that outline what your project aims to achieve</li>
+          </ul>
+          <p>Please ensure these sections are clearly labeled in your document and try again.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -107,6 +120,14 @@
     <div *ngIf="analysisResult && recommendationsList.length === 0 && !processingError" class="no-recommendations card">
       <h3>No Specific Recommendations Generated</h3>
       <p>No specific recommendations were generated at this time. This might happen if no similar projects were found or if the proposal content was too brief.</p>
+    </div>
+
+    <!-- View History Link -->
+    <div *ngIf="analysisResult" class="view-history-section">
+      <p>This analysis has been saved to your history. You can view all your past analyses anytime.</p>
+      <a [routerLink]="['/similarity-history']" class="btn btn-outline-primary">
+        <i class="bi bi-clock-history"></i> View Similarity History
+      </a>
     </div>
 
   </div>

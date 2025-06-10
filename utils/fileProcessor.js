@@ -150,10 +150,6 @@ exports.extractLimitedTextFromPdf = async (filePath, maxPages = 10) => {
   }
 };
 
-/**
-};
-
-
 // --- Metadata Extraction ---
 
 /**
@@ -168,12 +164,6 @@ exports.localExtractMetadata = (text) => {
   // console.log("Input text for localExtractMetadata (full):", text); // Potentially very long
   console.log("Input text for localExtractMetadata (first 1000 chars):", text.substring(0, 1000));
   const metadata = {
-    title: null,
-    supervisor: null,
-    students: [],
-    academicYear: null,
-    department: null, // Changed from programme
-    problemStatement: null,
     title: null,
     supervisor: null,
     students: [],
@@ -311,7 +301,6 @@ exports.localExtractMetadata = (text) => {
   return metadata;
 };
 
-
 /**
  * Extracts project metadata using OpenAI API (as a fallback).
  * Uses a specific prompt and expects a JSON response.
@@ -403,15 +392,40 @@ IGNORE all other information. If a value for a field cannot be found in the text
 };
 
 /**
-  }
-};
-
-
-/**
- * Extract project information using regex (DEPRECATED)
+ * Validates the extracted metadata to ensure it contains the necessary information
+ * for similarity analysis.
+ * @param {Object} metadata - The metadata object to validate
+ * @returns {Object} - Object containing validation result and missing fields
  */
-// const extractInfoWithRegex = (text) => { ... }; // Commented out
-
+exports.validateMetadata = (metadata) => {
+  const requiredFields = {
+    title: 'Title',
+    problemStatement: 'Problem Statement',
+    objectives: 'Objectives'
+  };
+  
+  const missingFields = [];
+  
+  // Check each required field
+  for (const [field, label] of Object.entries(requiredFields)) {
+    if (field === 'objectives') {
+      // For array fields, check if they exist and have content
+      if (!metadata[field] || !Array.isArray(metadata[field]) || metadata[field].length === 0) {
+        missingFields.push(label);
+      }
+    } else {
+      // For string fields, check if they exist and are not empty
+      if (!metadata[field] || typeof metadata[field] !== 'string' || metadata[field].trim() === '') {
+        missingFields.push(label);
+      }
+    }
+  }
+  
+  return {
+    isValid: missingFields.length === 0,
+    missingFields: missingFields
+  };
+};
 
 // --- Embeddings ---
 
@@ -505,67 +519,7 @@ exports.generateEmbeddings = async (metadata) => {
     throw new Error(`[DIRECT FETCH TEST] Failed to generate embeddings: ${error.message}`);
   }
   // --- END TEMPORARY FETCH TEST ---
-
-  // Original code using ollama SDK (now effectively bypassed if fetch test is conclusive)
-  // Kept for reference or if we revert.
-  /*
-  try {
-    const modelToUse = process.env.OLLAMA_MODEL || 'llama3';
-    console.log(`Attempting Ollama embedding with model: ${modelToUse}`);
-    
-    if (!process.env.OLLAMA_BASE_URL) {
-      console.error('OLLAMA_BASE_URL is not set in .env file. Cannot generate embeddings.');
-      throw new Error('Ollama base URL not configured.');
-    }
-
-    const response = await ollama.embeddings.create({
-      model: modelToUse, 
-      input: embeddingInput // For OpenAI SDK, 'input' is the correct parameter name
-    });
-
-    console.log("Raw response from Ollama embeddings endpoint (SDK):", JSON.stringify(response, null, 2));
-
-    let embeddingVector = null;
-    if (response.data && Array.isArray(response.data) && response.data.length > 0 && response.data[0].embedding) {
-      embeddingVector = response.data[0].embedding;
-    } else if (response.embedding && Array.isArray(response.embedding)) { 
-      console.log("Found embedding directly in response.embedding (SDK)");
-      embeddingVector = response.embedding;
-    }
-    
-    if (embeddingVector && embeddingVector.length > 0) {
-      const allZeros = embeddingVector.every(element => element === 0);
-      if (allZeros) {
-        console.warn(`Warning (SDK): Ollama returned an embedding vector of all zeros for model ${modelToUse} and input: ${embeddingInput.substring(0,100)}...`);
-      } else {
-        console.log(`Successfully received non-zero embeddings (SDK). First 5 values: ${embeddingVector.slice(0,5).join(', ')}`);
-      }
-      return embeddingVector;
-    } else {
-       console.error('Unexpected or empty response structure from Ollama embeddings (SDK). Full response logged above.');
-       throw new Error('Failed to parse valid embeddings from Ollama response (SDK).');
-    }
-  } catch (error) {
-    console.error(`Error generating embeddings with model ${process.env.OLLAMA_MODEL || 'llama3'} (SDK):`, error.message);
-    if (error.response && error.response.data) {
-      console.error("Ollama error response data (SDK):", JSON.stringify(error.response.data, null, 2));
-    }
-    throw new Error(`Failed to generate embeddings (SDK): ${error.message}`);
-  }
-  */
 };
-
-/**
-};
-
-
-/**
- * Process CSV file for bulk project upload (DEFERRED / REMOVED)
- */
-// exports.processCsvFile = async (filePath) => { ... }; // Commented out
-
-
-// --- Similarity ---
 
 /**
  * Calculate cosine similarity between two embedding vectors
@@ -597,5 +551,3 @@ exports.calculateCosineSimilarity = (a, b) => {
   const similarity = dotProduct / (magnitudeA * magnitudeB);
   return Math.max(0, Math.min(1, similarity));
 };
-
-// Removed duplicated function definitions below this line

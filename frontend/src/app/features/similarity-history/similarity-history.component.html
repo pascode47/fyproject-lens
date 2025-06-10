@@ -1,0 +1,146 @@
+<div class="container">
+  <div class="page-header">
+    <h1>Similarity Analysis History</h1>
+    <p class="lead">View your past project analyses and proposal checks</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-container">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Filter Results</h5>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="startDate">Start Date</label>
+              <input 
+                type="date" 
+                id="startDate" 
+                class="form-control" 
+                [(ngModel)]="startDate"
+              >
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="endDate">End Date</label>
+              <input 
+                type="date" 
+                id="endDate" 
+                class="form-control" 
+                [(ngModel)]="endDate"
+              >
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="type">Analysis Type</label>
+              <select 
+                id="type" 
+                class="form-control" 
+                [(ngModel)]="selectedType"
+              >
+                <option value="all">All Types</option>
+                <option value="project">Project Analysis</option>
+                <option value="proposal">Proposal Check</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="form-group w-100">
+              <button class="btn btn-primary me-2" (click)="applyFilters()">Apply Filters</button>
+              <button class="btn btn-secondary" (click)="resetFilters()">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading and Error States -->
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading your similarity history...</p>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger my-3">
+    {{ error }}
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && !error && historyItems.length === 0" class="alert alert-info my-3">
+    No similarity analysis history found. Try uploading a project or checking a proposal.
+  </div>
+
+  <!-- Results -->
+  <div *ngIf="!loading && historyItems.length > 0" class="history-list">
+    <div *ngFor="let item of historyItems" class="history-item card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <span class="badge" [ngClass]="item.analysisType === 'project' ? 'bg-primary' : 'bg-success'">
+            {{ item.analysisType === 'project' ? 'Project Analysis' : 'Proposal Check' }}
+          </span>
+          <span class="ms-2 text-muted">{{ formatDate(item.timestamp) }}</span>
+        </div>
+        <div class="similarity-badge" [ngClass]="{'high': item.similarityPercentage >= 70, 'medium': item.similarityPercentage >= 40 && item.similarityPercentage < 70, 'low': item.similarityPercentage < 40}">
+          {{ item.similarityPercentage }}% Similar
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <!-- Project Analysis -->
+        <div *ngIf="item.analysisType === 'project' && item.projectId">
+          <h5 class="card-title">
+            <a [routerLink]="['/projects', item.projectId]">{{ item.project?.title || 'Untitled Project' }}</a>
+          </h5>
+          <p *ngIf="item.project?.department" class="card-text">
+            <strong>Department:</strong> {{ item.project?.department }}
+          </p>
+          <p *ngIf="item.project?.academicYear" class="card-text">
+            <strong>Academic Year:</strong> {{ item.project?.academicYear }}
+          </p>
+        </div>
+        
+        <!-- Proposal Check -->
+        <div *ngIf="item.analysisType === 'proposal' && item.proposalDetails">
+          <h5 class="card-title">{{ item.proposalDetails.title || 'Untitled Proposal' }}</h5>
+          <p *ngIf="item.proposalDetails.department" class="card-text">
+            <strong>Department:</strong> {{ item.proposalDetails.department }}
+          </p>
+          <p *ngIf="item.proposalDetails.academicYear" class="card-text">
+            <strong>Academic Year:</strong> {{ item.proposalDetails.academicYear }}
+          </p>
+          <p *ngIf="item.proposalDetails.supervisor" class="card-text">
+            <strong>Supervisor:</strong> {{ item.proposalDetails.supervisor }}
+          </p>
+          
+          <!-- Similar Projects -->
+          <div *ngIf="item.similarProjects && item.similarProjects.length > 0" class="mt-3">
+            <h6>Similar Projects:</h6>
+            <ul class="list-group">
+              <li *ngFor="let similar of item.similarProjects" class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <a [routerLink]="['/projects', similar.projectId]">{{ similar.projectTitle }}</a>
+                  <small class="d-block text-muted">{{ similar.department }} ({{ similar.year }})</small>
+                </div>
+                <span class="badge bg-primary rounded-pill">{{ similar.similarityPercentage }}%</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- Recommendations -->
+        <div *ngIf="item.recommendations && item.recommendations.length > 0" class="mt-3">
+          <h6>Recommendations:</h6>
+          <ul class="list-group">
+            <li *ngFor="let rec of item.recommendations" class="list-group-item">
+              {{ rec }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

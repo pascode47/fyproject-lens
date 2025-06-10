@@ -1,6 +1,7 @@
 import { Component, ChangeDetectorRef } from '@angular/core'; // ViewChild import removed
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AnalysisService } from '../../shared/services/analysis.service';
 import { ProposalCheckApiResponse, ProposalDetails } from '../../models/proposal-check.model'; // Removed ProposalCheckData as it's not used
 import { SimilarityResult } from '../../models/similarity-result';
@@ -13,6 +14,7 @@ import { ProjectCardComponent } from '../../shared/components/project-card/proje
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     FileUploadComponent,
     ProjectCardComponent
   ],
@@ -99,8 +101,18 @@ export class ProposalCheckComponent {
         this.cdr.detectChanges(); 
       },
       error: (err) => {
+        // Check if this is a metadata validation error (422 status code)
+        const isMetadataError = err.status === 422;
         const backendError = err.error?.message || err.error?.error || err.message;
-        this.processingError = backendError || 'Failed to analyze proposal. Please try again.';
+        
+        if (isMetadataError) {
+          // Format the error message for metadata validation errors
+          this.processingError = backendError || 'The uploaded document is missing required information. Please ensure your proposal includes all necessary sections.';
+        } else {
+          // Generic error message for other errors
+          this.processingError = backendError || 'Failed to analyze proposal. Please try again.';
+        }
+        
         console.error('Proposal analysis error in component:', err);
         this.isProcessing = false;
         console.log('Processing finished due to error, isProcessing set to false.');

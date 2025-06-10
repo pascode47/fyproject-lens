@@ -7,6 +7,9 @@ const router = express.Router();
 // All routes are protected
 router.use(auth.protect);
 
+// Get user's similarity history
+router.get('/history', similarityController.getUserSimilarityHistory);
+
 // Get similarity results for a project
 router.get('/:projectId', similarityController.getSimilarityResults);
 

@@ -51,6 +51,25 @@
       </p>
       <!-- Alternatively, embed viewer here if implementing that -->
     </div>
+
+    <div class="similarity-analysis">
+      <h3>Similarity Analysis</h3>
+      <div class="analysis-actions">
+        <button 
+          class="analyze-button" 
+          (click)="analyzeProject()" 
+          [disabled]="isAnalyzing">
+          <span *ngIf="!isAnalyzing">Analyze for Similarities</span>
+          <span *ngIf="isAnalyzing"><span class="spinner"></span> Analyzing...</span>
+        </button>
+        <a [routerLink]="['/similarity-history']" class="history-link">
+          View Analysis History
+        </a>
+      </div>
+      <div *ngIf="analysisMessage" class="analysis-message" [ngClass]="{'success': analysisSuccess, 'error': !analysisSuccess}">
+        {{ analysisMessage }}
+      </div>
+    </div>
     
     <div class="navigation-buttons">
       <button class="back-button" routerLink="/browse-projects">

@@ -24,6 +24,13 @@ router.post(
 );
 
 // Admin only routes
+router.put(
+  '/:id',
+  auth.protect,
+  auth.authorize('admin'),
+  projectController.updateProject
+);
+
 router.delete(
   '/:id',
   auth.protect,

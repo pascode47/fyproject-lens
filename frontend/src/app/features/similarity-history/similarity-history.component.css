@@ -1,0 +1,57 @@
+.page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.filters-container {
+  margin-bottom: 2rem;
+}
+
+.history-item {
+  transition: transform 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.history-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.similarity-badge {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-weight: bold;
+  color: white;
+}
+
+.similarity-badge.high {
+  background-color: #dc3545; /* Red for high similarity */
+}
+
+.similarity-badge.medium {
+  background-color: #fd7e14; /* Orange for medium similarity */
+}
+
+.similarity-badge.low {
+  background-color: #28a745; /* Green for low similarity */
+}
+
+.card-title a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.card-title a:hover {
+  text-decoration: underline;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .col-md-3 {
+    margin-bottom: 1rem;
+  }
+}

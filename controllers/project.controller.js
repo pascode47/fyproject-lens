@@ -349,6 +349,76 @@ exports.getRecentActivities = async (req, res, next) => {
 };
 
 /**
+ * Update a project
+ * @route PUT /api/projects/:id
+ * @access Private (Admin only)
+ */
+exports.updateProject = async (req, res, next) => {
+  try {
+    const { 
+      title, 
+      problemStatement, 
+      objectives, 
+      department, 
+      academicYear, 
+      supervisor, 
+      students 
+    } = req.body;
+
+    // Find the project
+    const project = await Project.findById(req.params.id);
+    
+    if (!project) {
+      return response.error(res, 'Project not found', 404);
+    }
+    
+    // Update project fields
+    if (title) project.title = title;
+    if (problemStatement) project.problemStatement = problemStatement;
+    if (objectives) project.objectives = objectives;
+    if (department) project.department = department;
+    if (academicYear) project.academicYear = academicYear;
+    if (supervisor !== undefined) project.supervisor = supervisor;
+    if (students) project.students = students;
+    
+    // If significant text fields changed (title, problemStatement, objectives), 
+    // regenerate embeddings
+    if (title || problemStatement || objectives) {
+      try {
+        console.log('Regenerating embeddings due to content changes...');
+        const updatedMetadata = {
+          title: project.title,
+          problemStatement: project.problemStatement,
+          objectives: project.objectives,
+          department: project.department,
+          academicYear: project.academicYear,
+          supervisor: project.supervisor,
+          students: project.students
+        };
+        
+        const newEmbeddings = await fileProcessor.generateEmbeddings(updatedMetadata);
+        project.embeddings = newEmbeddings;
+        console.log('Embeddings regenerated successfully.');
+      } catch (embeddingError) {
+        console.error('Error regenerating embeddings:', embeddingError);
+        // Continue with save even if embeddings fail
+      }
+    }
+    
+    // Save the updated project
+    await project.save();
+    
+    return response.success(
+      res,
+      'Project updated successfully',
+      { project }
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Delete a project
  * @route DELETE /api/projects/:id
  * @access Private (Admin only)

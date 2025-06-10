@@ -7,7 +7,8 @@ import { ProjectListComponent } from "./features/browse-projects/project-list.co
 import { SimilarityResultsComponent } from "./features/upload-analysis/similarity-results.component";
 import { RecommendationListComponent } from "./features/popular-ideas/recommendation-list.component";
 import { ProfileComponent } from "./features/profile/profile.component";
-import { ProjectDetailComponent } from "./features/project-detail/project-detail.component"; // Import the new component
+import { ProjectDetailComponent } from "./features/project-detail/project-detail.component";
+import { SimilarityHistoryComponent } from "./features/similarity-history/similarity-history.component";
 import { AuthGuard } from "./core/auth.guard";
 import { AdminGuard } from "./core/admin.guard";
 
@@ -34,6 +35,7 @@ export const routes: Routes = [
     data: { title: 'Project Details' }
   },
   { path: 'popular-ideas', component: RecommendationListComponent, canActivate: [AuthGuard] },
+  { path: 'similarity-history', component: SimilarityHistoryComponent, canActivate: [AuthGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   
   // Admin routes

@@ -59,6 +59,7 @@ export class ProfileComponent implements OnInit {
             'Add more details to the methodology section',
             'Include more references to recent research'
           ],
+          analysisType: 'project', // Added required property
           timestamp: new Date('2023-11-15')
         },
         {
@@ -70,6 +71,7 @@ export class ProfileComponent implements OnInit {
             'Consider expanding the literature review',
             'Add more analysis of the results'
           ],
+          analysisType: 'project', // Added required property
           timestamp: new Date('2023-12-01')
         }
       ];

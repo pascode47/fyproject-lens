@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { ProjectService } from '../../services/project.service'; // Adjust path if needed
-import { Project } from '../../models/project'; // Adjust path if needed
-import { environment } from '../../../environments/environment'; // For API URL
+import { ProjectService } from '../../services/project.service';
+import { SimilarityService } from '../../services/similarity.service';
+import { Project } from '../../models/project';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-project-detail',
@@ -17,10 +18,16 @@ export class ProjectDetailComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   projectId: string | null = null;
+  
+  // Similarity analysis properties
+  isAnalyzing = false;
+  analysisMessage: string | null = null;
+  analysisSuccess = false;
 
   constructor(
     private route: ActivatedRoute,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private similarityService: SimilarityService
   ) {}
 
   ngOnInit(): void {
@@ -92,5 +99,38 @@ export class ProjectDetailComponent implements OnInit {
       return `${environment.apiUrl}/projects/${this.projectId}/download`;
     }
     return null;
+  }
+  
+  /**
+   * Analyze the current project for similarities with other projects
+   */
+  analyzeProject(): void {
+    if (!this.projectId) {
+      this.analysisMessage = 'Project ID is missing. Cannot analyze.';
+      this.analysisSuccess = false;
+      return;
+    }
+    
+    this.isAnalyzing = true;
+    this.analysisMessage = null;
+    
+    this.similarityService.analyzeSimilarity(this.projectId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.analysisMessage = 'Analysis completed successfully! You can view the results in your similarity history.';
+          this.analysisSuccess = true;
+        } else {
+          this.analysisMessage = response.message || 'Analysis failed. Please try again.';
+          this.analysisSuccess = false;
+        }
+        this.isAnalyzing = false;
+      },
+      error: (err) => {
+        console.error('Error analyzing project:', err);
+        this.analysisMessage = err.error?.message || 'Failed to analyze project. Please try again later.';
+        this.analysisSuccess = false;
+        this.isAnalyzing = false;
+      }
+    });
   }
 }

@@ -135,6 +135,13 @@
             <td>{{ getUploaderName(project.uploadedBy) }}</td> 
             <td class="actions-cell">
               <button 
+                (click)="editProject(project)" 
+                class="btn-primary"
+                title="Edit project details"
+                [disabled]="isLoading">
+                Edit
+              </button>
+              <button 
                 (click)="deleteProject(project._id, project.title)" 
                 class="btn-danger"
                 title="Delete project"
@@ -167,5 +174,118 @@
         </button>
       </div>
     </div> <!-- End of projects-table -->
+  </div>
+
+  <!-- Edit Project Modal -->
+  <div *ngIf="showEditModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Project Details</h3>
+        <button class="close-button" (click)="cancelEdit()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="editError" class="error-message">
+          {{ editError }}
+        </div>
+        <div *ngIf="editSuccess" class="success-message">
+          {{ editSuccess }}
+        </div>
+
+        <form *ngIf="editingProject">
+          <div class="form-group">
+            <label for="title">Title:</label>
+            <input 
+              type="text" 
+              id="title" 
+              [(ngModel)]="editingProject.title" 
+              name="title" 
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="department">Department:</label>
+            <input 
+              type="text" 
+              id="department" 
+              [(ngModel)]="editingProject.department" 
+              name="department" 
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="academicYear">Academic Year:</label>
+            <input 
+              type="text" 
+              id="academicYear" 
+              [(ngModel)]="editingProject.academicYear" 
+              name="academicYear" 
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="supervisor">Supervisor:</label>
+            <input 
+              type="text" 
+              id="supervisor" 
+              [(ngModel)]="editingProject.supervisor" 
+              name="supervisor"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="problemStatement">Problem Statement:</label>
+            <textarea 
+              id="problemStatement" 
+              [(ngModel)]="editingProject.problemStatement" 
+              name="problemStatement" 
+              rows="4"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Objectives:</label>
+            <div *ngFor="let objective of editingProject.objectives; let i = index" class="objective-item">
+              <input 
+                type="text" 
+                [(ngModel)]="editingProject.objectives[i]" 
+                [name]="'objective' + i"
+              />
+              <button type="button" class="btn-danger btn-sm" (click)="removeObjective(i)">Remove</button>
+            </div>
+            <button type="button" class="btn-secondary" (click)="addObjective()">Add Objective</button>
+          </div>
+
+          <div class="form-group">
+            <label>Students:</label>
+            <div *ngFor="let student of editingProject.students; let i = index" class="student-item">
+              <input 
+                type="text" 
+                [(ngModel)]="editingProject.students[i]" 
+                [name]="'student' + i"
+              />
+              <button type="button" class="btn-danger btn-sm" (click)="removeStudent(i)">Remove</button>
+            </div>
+            <button type="button" class="btn-secondary" (click)="addStudent()">Add Student</button>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancel</button>
+            <button 
+              type="button" 
+              class="btn-primary" 
+              (click)="saveProjectChanges()" 
+              [disabled]="isUpdating"
+            >
+              <span *ngIf="!isUpdating">Save Changes</span>
+              <span *ngIf="isUpdating">Saving... <span class="spinner"></span></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </div>

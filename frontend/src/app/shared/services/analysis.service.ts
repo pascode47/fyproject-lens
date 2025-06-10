@@ -189,6 +189,7 @@ export class AnalysisService {
           'Add more details to the methodology section',
           'Include more references to recent research'
         ],
+        analysisType: 'project',
         timestamp: new Date('2023-11-15')
       },
       {
@@ -200,6 +201,7 @@ export class AnalysisService {
           'Consider expanding the literature review',
           'Add more analysis of the results'
         ],
+        analysisType: 'project',
         timestamp: new Date('2023-12-01')
       },
       {
@@ -211,6 +213,7 @@ export class AnalysisService {
           'Your approach is quite unique, consider publishing in a conference',
           'Add more examples to demonstrate your implementation'
         ],
+        analysisType: 'project',
         timestamp: new Date('2024-01-10')
       }
     ]);

@@ -75,13 +75,51 @@
 }
 
 .error-message {
+  display: flex;
   color: var(--danger-color-dark, #721c24);
   background-color: var(--danger-color-light, #f8d7da);
   border: 1px solid var(--danger-color, #e74c3c);
-  padding: var(--spacing-3);
+  padding: 0;
   border-radius: var(--border-radius-sm);
   margin-top: var(--spacing-3);
-  text-align: center;
+  overflow: hidden;
+}
+
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--danger-color, #e74c3c);
+  color: white;
+  padding: 15px;
+  font-size: 1.5rem;
+}
+
+.error-content {
+  padding: var(--spacing-3);
+  flex: 1;
+}
+
+.error-content h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--danger-color, #e74c3c);
+}
+
+.error-help {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.error-help ul {
+  margin-left: 20px;
+  padding-left: 0;
+}
+
+.error-help li {
+  margin-bottom: 5px;
 }
 
 .loading-results {
@@ -158,4 +196,27 @@
   margin-bottom: 8px;
   line-height: 1.5;
   color: #444;
+}
+
+.view-history-section {
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+  border: 1px dashed #ccc;
+}
+
+.view-history-section p {
+  margin-bottom: 15px;
+  color: #555;
+}
+
+.view-history-section .btn {
+  padding: 10px 20px;
+  font-weight: 500;
+}
+
+.view-history-section .btn i {
+  margin-right: 8px;
 }

@@ -278,6 +278,34 @@ export class AdminService {
   }
   
   /**
+   * Update a project
+   * @param projectId The ID of the project to update
+   * @param projectData The updated project data
+   * @returns Observable with the updated project
+   */
+  updateProject(projectId: string, projectData: any): Observable<{ project: any }> {
+    const headers = this.createAuthHeaders();
+    
+    return this.http.put<any>(
+      `${this.apiUrl}/projects/${projectId}`,
+      projectData,
+      { headers }
+    ).pipe(
+      map(response => {
+        // Map the backend response to the expected format
+        if (response && response.success && response.data) {
+          return { project: response.data.project };
+        }
+        throw new Error('Invalid response format');
+      }),
+      catchError(error => {
+        console.error(`Error updating project with ID ${projectId}:`, error);
+        throw error; // Re-throw error
+      })
+    );
+  }
+
+  /**
    * Delete a project
    * @param projectId The ID of the project to delete
    * @returns Observable with success status

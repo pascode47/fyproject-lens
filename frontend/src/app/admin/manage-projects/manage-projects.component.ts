@@ -50,6 +50,14 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
   uploadSuccessMessage: string | null = null; 
   uploadErrorMessage: string | null = null;
 
+  // Project Edit Modal
+  showEditModal: boolean = false;
+  editingProject: any = null;
+  originalProject: any = null; // To keep a copy of the original project data
+  isUpdating: boolean = false;
+  editError: string | null = null;
+  editSuccess: string | null = null;
+
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>(); // For unsubscribing
@@ -240,5 +248,150 @@ export class ManageProjectsComponent implements OnInit, OnDestroy {
     }
     // If it's just a string (ID) or null/undefined object, return 'N/A' or the ID itself if needed
     return uploadedBy?.toString() || 'N/A'; 
+  }
+
+  // --- Project Edit Handlers ---
+
+  /**
+   * Open the edit modal for a project
+   * @param project The project to edit
+   */
+  editProject(project: any): void {
+    // Create a deep copy of the project to avoid modifying the original directly
+    this.originalProject = { ...project };
+    this.editingProject = {
+      _id: project._id,
+      title: project.title,
+      department: project.department,
+      academicYear: project.academicYear,
+      problemStatement: project.problemStatement,
+      objectives: project.objectives ? [...project.objectives] : [],
+      supervisor: project.supervisor || '',
+      students: project.students ? [...project.students] : []
+    };
+    
+    this.showEditModal = true;
+    this.editError = null;
+    this.editSuccess = null;
+  }
+
+  /**
+   * Close the edit modal without saving changes
+   */
+  cancelEdit(): void {
+    if (this.isUpdating) {
+      return; // Don't allow canceling while update is in progress
+    }
+    
+    this.showEditModal = false;
+    this.editingProject = null;
+    this.originalProject = null;
+    this.editError = null;
+    this.editSuccess = null;
+  }
+
+  /**
+   * Save the changes to the project
+   */
+  saveProjectChanges(): void {
+    if (!this.editingProject || this.isUpdating) {
+      return;
+    }
+
+    // Basic validation
+    if (!this.editingProject.title || !this.editingProject.department || !this.editingProject.academicYear) {
+      this.editError = 'Title, Department, and Academic Year are required fields.';
+      return;
+    }
+
+    this.isUpdating = true;
+    this.editError = null;
+    this.editSuccess = null;
+
+    // Prepare data for update
+    const projectData = {
+      title: this.editingProject.title,
+      department: this.editingProject.department,
+      academicYear: this.editingProject.academicYear,
+      problemStatement: this.editingProject.problemStatement,
+      objectives: this.editingProject.objectives,
+      supervisor: this.editingProject.supervisor,
+      students: this.editingProject.students
+    };
+
+    this.adminService.updateProject(this.editingProject._id, projectData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isUpdating = false;
+          this.editSuccess = 'Project updated successfully.';
+          
+          // Update the project in the local list
+          const index = this.projects.findIndex(p => p._id === this.editingProject._id);
+          if (index !== -1) {
+            this.projects[index] = { ...this.projects[index], ...projectData };
+          }
+          
+          // Close modal after a short delay to show success message
+          setTimeout(() => {
+            this.showEditModal = false;
+            this.editingProject = null;
+            this.originalProject = null;
+            this.editSuccess = null;
+            
+            // Reload projects to ensure we have the latest data
+            this.loadProjects();
+          }, 1500);
+        },
+        error: (error) => {
+          this.isUpdating = false;
+          this.editError = error?.error?.message || 'Failed to update project. Please try again.';
+          console.error('Error updating project:', error);
+        }
+      });
+  }
+
+  /**
+   * Add a new empty objective to the editing project
+   */
+  addObjective(): void {
+    if (this.editingProject) {
+      if (!this.editingProject.objectives) {
+        this.editingProject.objectives = [];
+      }
+      this.editingProject.objectives.push('');
+    }
+  }
+
+  /**
+   * Remove an objective at the specified index
+   * @param index The index of the objective to remove
+   */
+  removeObjective(index: number): void {
+    if (this.editingProject && this.editingProject.objectives && index >= 0 && index < this.editingProject.objectives.length) {
+      this.editingProject.objectives.splice(index, 1);
+    }
+  }
+
+  /**
+   * Add a new empty student to the editing project
+   */
+  addStudent(): void {
+    if (this.editingProject) {
+      if (!this.editingProject.students) {
+        this.editingProject.students = [];
+      }
+      this.editingProject.students.push('');
+    }
+  }
+
+  /**
+   * Remove a student at the specified index
+   * @param index The index of the student to remove
+   */
+  removeStudent(index: number): void {
+    if (this.editingProject && this.editingProject.students && index >= 0 && index < this.editingProject.students.length) {
+      this.editingProject.students.splice(index, 1);
+    }
   }
 }

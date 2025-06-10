@@ -65,6 +65,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: '💡',
       requiresAuth: false
     },
+    {
+      label: 'Similarity History',
+      path: '/similarity-history',
+      icon: '📊',
+      requiresAuth: true
+    },
     { 
       label: 'Profile', 
       path: '/profile', 

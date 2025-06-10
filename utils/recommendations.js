@@ -14,39 +14,61 @@ const ollama = new OpenAI({
  */
 exports.generateRecommendations = async (projectData, similarProjects) => {
   try {
-    // Format project data for the prompt
+    // Format project data for the prompt with more details
     const userProject = `
-      Title: ${projectData.title}
-      Problem Statement: ${projectData.problemStatement}
-      Objectives: ${projectData.objectives.join(', ')}
+      Title: ${projectData.title || "Untitled Proposal"}
+      Problem Statement: ${projectData.problemStatement || "Not provided"}
+      Objectives: ${Array.isArray(projectData.objectives) && projectData.objectives.length > 0 
+        ? projectData.objectives.map(obj => `- ${obj}`).join('\n      ') 
+        : "Not provided"}
+      Department: ${projectData.department || "Not specified"}
     `;
     
-    // Format similar projects for the prompt
-    const similarProjectsText = similarProjects.map(project => `
-      Title: ${project.title}
-      Problem Statement: ${project.problemStatement}
-      Objectives: ${project.objectives.join(', ')}
-      Similarity: ${project.similarityPercentage}%
-    `).join('\n');
+    // Format similar projects for the prompt with more structured comparison
+    const similarProjectsText = similarProjects.map((project, index) => `
+      SIMILAR PROJECT ${index + 1} (${project.similarityPercentage}% similarity):
+      Title: ${project.title || "Untitled"}
+      Problem Statement: ${project.problemStatement || "Not provided"}
+      Objectives: ${Array.isArray(project.objectives) && project.objectives.length > 0 
+        ? project.objectives.map(obj => `- ${obj}`).join('\n      ') 
+        : "Not provided"}
+      Department: ${project.department || "Not specified"}
+      Academic Year: ${project.academicYear || "Not specified"}
+    `).join('\n\n');
     
-    // Create the prompt
+    // Create a more detailed and structured prompt
     const prompt = `
-      Based on the similarity analysis between the user's project and similar projects, 
-      generate 3-5 specific recommendations to improve the project.
+      You are an academic project advisor tasked with providing detailed recommendations for a student's project proposal.
       
-      User project:
+      I'll provide you with:
+      1. The student's project proposal details
+      2. Information about similar existing projects in our database
+      
+      Your task is to perform a DETAILED COMPARISON between the proposal and the similar projects, then provide 4-6 specific, actionable recommendations to help the student improve their proposal.
+      
+      # STUDENT'S PROPOSAL:
       ${userProject}
       
-      Similar projects:
+      # SIMILAR EXISTING PROJECTS:
       ${similarProjectsText}
       
-      Please provide recommendations that:
-      1. Address potential gaps in the problem statement
-      2. Suggest improvements to the objectives
-      3. Highlight areas where the project could differentiate from similar ones
-      4. Recommend specific approaches or methodologies
+      # ANALYSIS INSTRUCTIONS:
+      1. First, identify specific similarities and differences between the proposal and each similar project
+      2. Look for patterns across the similar projects that might indicate common approaches or methodologies in this field
+      3. Identify any potential gaps in the student's proposal compared to the similar projects
+      4. Consider how the student could differentiate their project from the similar ones
       
-      Return only the recommendations as a numbered list.
+      # RECOMMENDATION INSTRUCTIONS:
+      Based on your analysis, provide 4-6 specific, actionable recommendations that:
+      1. Address specific gaps or weaknesses in the problem statement compared to similar projects
+      2. Suggest concrete improvements or additions to the objectives based on what similar projects have done
+      3. Recommend specific approaches, methodologies, or technologies that similar projects have used successfully
+      4. Suggest ways the student can differentiate their project from similar ones
+      5. Identify potential challenges the student might face based on similar projects
+      
+      Format your recommendations as a numbered list. Each recommendation should be specific, actionable, and directly related to the comparison between the proposal and similar projects.
+      
+      IMPORTANT: Your recommendations must be based on the actual content of the proposal and similar projects. Do not make generic recommendations that could apply to any project.
     `;
 
     // Call Ollama API
