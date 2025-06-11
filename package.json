@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
+    "frontend": "cd frontend && ng serve",
     "dev": "nodemon server.js",
     "create-admin": "node scripts/create-admin.js",
     "export-metadata": "node scripts/export_project_metadata.js",
