@@ -181,7 +181,8 @@ exports.localExtractMetadata = (text) => {
   const titleRegex3 = /^\s*([A-Z][A-Z\s\-]{5,})\s*$/m; // Heuristic: All caps line near top
 
   // Supervisor: Look for "Supervisor:", "Supervised by", etc.
-  const supervisorRegex = /SUPERVISOR\s*[:\-]?\s*(Dr\.|Prof\.|Mr\.|Ms\.)?\s*([A-Za-z\s\.\-]+)/i;
+  // Updated to avoid capturing "Title" as part of the supervisor name
+  const supervisorRegex = /SUPERVISOR\s*[:\-]?\s*(Dr\.|Prof\.|Mr\.|Ms\.)?\s*([A-Za-z\s\.\-]+?)(?=\s*\n\s*(?:TITLE|PROJECT|DEPARTMENT|ACADEMIC|YEAR|STUDENTS)|\s*$)/i;
 
   // Students: Look for "By:", "Submitted by:", "Group Members:", followed by names/reg numbers
   // This is tricky, might need multi-line matching and careful parsing.
@@ -199,10 +200,12 @@ exports.localExtractMetadata = (text) => {
 
 
   // Problem Statement: Look for headings like "Problem Statement", "1.1 Background", "Introduction"
-  const problemStatementRegex = /(?:PROBLEM\s+STATEMENT|BACKGROUND|INTRODUCTION)(?:[\s\n]+)([\s\S]*?)(?:OBJECTIVES|METHODOLOGY|LITERATURE\s+REVIEW|CHAPTER\s+2)/i; // Capture section
+  // Updated to be more flexible with formatting and capture content more reliably
+  const problemStatementRegex = /(?:PROBLEM\s+STATEMENT|PROBLEM\s*STATEMENT\s*:|BACKGROUND|INTRODUCTION)(?:[\s\n:]+)([\s\S]*?)(?:OBJECTIVES|METHODOLOGY|LITERATURE\s+REVIEW|CHAPTER\s+2)/i; // Capture section
 
   // Objectives: Look for "Objectives", "Project Objectives", followed by bullet points or numbered lists
-  const objectivesRegex = /(?:PROJECT\s+)?OBJECTIVES(?:[\s\n]+)([\s\S]*?)(?:METHODOLOGY|SCOPE|CHAPTER|PROBLEM\s+STATEMENT|INTRODUCTION)/i; // Capture section
+  // Updated to be more flexible with formatting and capture content more reliably
+  const objectivesRegex = /(?:PROJECT\s+)?OBJECTIVES(?:[\s\n:]*)([\s\S]*?)(?:METHODOLOGY|SCOPE|CHAPTER|PROBLEM\s+STATEMENT|INTRODUCTION|$)/i; // Capture section, added $ to match end of string
 
   // --- Extraction Logic ---
 
