@@ -1,0 +1,12 @@
+{
+  "metrics": {
+    "totalProjects": 0,
+    "embeddingMeanError": null,
+    "metadataMeanError": null,
+    "combinedMeanError": null,
+    "embeddingRMSE": null,
+    "metadataRMSE": null,
+    "combinedRMSE": null
+  },
+  "results": []
+}

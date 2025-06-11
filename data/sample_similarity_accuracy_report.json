@@ -1,0 +1,78 @@
+{
+  "metrics": {
+    "totalProjects": 5,
+    "embeddingMeanError": 0.124,
+    "metadataMeanError": 0.086,
+    "combinedMeanError": 0.072,
+    "embeddingRMSE": 0.1432,
+    "metadataRMSE": 0.0975,
+    "combinedRMSE": 0.0854
+  },
+  "results": [
+    {
+      "projectId": "6473a2e5c12d8a9b3f4e5f6g",
+      "projectTitle": "Automated Irrigation System for Agriculture",
+      "manualSimilarity": 0.85,
+      "embeddingSimilarity": 0.785,
+      "metadataSimilarity": 0.823,
+      "combinedSimilarity": 0.823,
+      "embeddingError": 0.065,
+      "metadataError": 0.027,
+      "combinedError": 0.027,
+      "similarSections": "Title,ProblemStatement,Objectives",
+      "notes": "Very similar core concept, both focus on smart irrigation and water optimization"
+    },
+    {
+      "projectId": "6473a2e5c12d8a9b3f4e5f7h",
+      "projectTitle": "Smart Home Energy Management",
+      "manualSimilarity": 0.4,
+      "embeddingSimilarity": 0.258,
+      "metadataSimilarity": 0.352,
+      "combinedSimilarity": 0.352,
+      "embeddingError": 0.142,
+      "metadataError": 0.048,
+      "combinedError": 0.048,
+      "similarSections": "Objectives",
+      "notes": "Similar in using sensors and algorithms, but different domain and purpose"
+    },
+    {
+      "projectId": "6473a2e5c12d8a9b3f4e5f8i",
+      "projectTitle": "Urban Farming Technologies",
+      "manualSimilarity": 0.65,
+      "embeddingSimilarity": 0.521,
+      "metadataSimilarity": 0.584,
+      "combinedSimilarity": 0.584,
+      "embeddingError": 0.129,
+      "metadataError": 0.066,
+      "combinedError": 0.066,
+      "similarSections": "ProblemStatement,Objectives",
+      "notes": "Both address urban farming challenges, but different technical approaches"
+    },
+    {
+      "projectId": "6473a2e5c12d8a9b3f4e5f9j",
+      "projectTitle": "Mobile Application for Plant Disease Detection",
+      "manualSimilarity": 0.25,
+      "embeddingSimilarity": 0.183,
+      "metadataSimilarity": 0.156,
+      "combinedSimilarity": 0.183,
+      "embeddingError": 0.067,
+      "metadataError": 0.094,
+      "combinedError": 0.067,
+      "similarSections": "",
+      "notes": "Different focus, though both are agricultural technology applications"
+    },
+    {
+      "projectId": "6473a2e5c12d8a9b3f4e5f0k",
+      "projectTitle": "Water Conservation System for Public Parks",
+      "manualSimilarity": 0.7,
+      "embeddingSimilarity": 0.483,
+      "metadataSimilarity": 0.617,
+      "combinedSimilarity": 0.617,
+      "embeddingError": 0.217,
+      "metadataError": 0.083,
+      "combinedError": 0.083,
+      "similarSections": "ProblemStatement,Objectives",
+      "notes": "Similar water conservation goals and technical approach, but different application context"
+    }
+  ]
+}

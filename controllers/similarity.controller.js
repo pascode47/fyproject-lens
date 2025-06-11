@@ -119,14 +119,74 @@ exports.checkProposalSimilarity = async (req, res, next) => {
       return response.success(res, 'No existing projects with embeddings available for comparison.', { similarProjects: [], recommendations: ['No existing projects to compare against.'] });
     }
 
-    // 5. Calculate similarity with each existing project
+    // 5. Calculate similarity with each existing project using both methods
     const proposalSimilarityResults = [];
     for (const existingProject of existingProjects) {
-      const similarity = fileProcessor.calculateCosineSimilarity(
-        proposalEmbeddings,
-        existingProject.embeddings
+      // Calculate embedding-based similarity if both have embeddings
+      let embeddingSimilarity = 0;
+      if (proposalEmbeddings.length > 0 && existingProject.embeddings && existingProject.embeddings.length > 0) {
+        embeddingSimilarity = fileProcessor.calculateCosineSimilarity(
+          proposalEmbeddings,
+          existingProject.embeddings
+        );
+      }
+      
+      // Calculate weighted metadata-based similarity as an alternative approach
+      const metadataSimilarity = fileProcessor.calculateWeightedSimilarity(
+        proposalMetadata,
+        {
+          title: existingProject.title,
+          problemStatement: existingProject.problemStatement,
+          objectives: existingProject.objectives,
+          department: existingProject.department
+        }
       );
+      
+      // Use the higher of the two similarity scores
+      // This gives us the benefit of both approaches
+      const similarity = Math.max(embeddingSimilarity, metadataSimilarity);
       const similarityPercentage = Math.round(similarity * 100);
+      
+      // Determine which sections are similar based on individual component similarities
+      const similarSections = [];
+      
+      // Check title similarity
+      if (proposalMetadata.title && existingProject.title) {
+        const titleSimilarity = fileProcessor.calculateWeightedSimilarity(
+          { title: proposalMetadata.title },
+          { title: existingProject.title },
+          { title: 1.0 } // Only consider title
+        );
+        if (titleSimilarity > 0.6) {
+          similarSections.push('Title');
+        }
+      }
+      
+      // Check problem statement similarity
+      if (proposalMetadata.problemStatement && existingProject.problemStatement) {
+        const psSimilarity = fileProcessor.calculateWeightedSimilarity(
+          { problemStatement: proposalMetadata.problemStatement },
+          { problemStatement: existingProject.problemStatement },
+          { problemStatement: 1.0 } // Only consider problem statement
+        );
+        if (psSimilarity > 0.5) {
+          similarSections.push('Problem Statement');
+        }
+      }
+      
+      // Check objectives similarity
+      if (proposalMetadata.objectives && existingProject.objectives &&
+          Array.isArray(proposalMetadata.objectives) && Array.isArray(existingProject.objectives) &&
+          proposalMetadata.objectives.length > 0 && existingProject.objectives.length > 0) {
+        const objSimilarity = fileProcessor.calculateWeightedSimilarity(
+          { objectives: proposalMetadata.objectives },
+          { objectives: existingProject.objectives },
+          { objectives: 1.0 } // Only consider objectives
+        );
+        if (objSimilarity > 0.4) {
+          similarSections.push('Objectives');
+        }
+      }
 
       if (similarityPercentage >= 10) { // Lower threshold for just showing matches
         proposalSimilarityResults.push({
@@ -136,7 +196,7 @@ exports.checkProposalSimilarity = async (req, res, next) => {
           department: existingProject.department,
           year: existingProject.academicYear,   // Changed 'academicYear' to 'year'
           similarityPercentage: similarityPercentage,
-          similarSections: [], // Add similarSections, even if empty for now, to match interface
+          similarSections: similarSections, // Now populated based on component similarities
           // For recommendations, we still need the original fields if they differ
           // So, we might need to adjust what's passed to generateRecommendations or ensure it uses these new names
           // For now, focusing on matching SimilarityResult for display
@@ -277,16 +337,40 @@ exports.analyzeSimilarity = async (req, res, next) => {
     let highestSimilarity = 0;
     
     for (const otherProject of otherProjects) {
-      // Skip projects without embeddings
-      if (!otherProject.embeddings || otherProject.embeddings.length === 0) {
+      // Skip projects without embeddings or metadata
+      if ((!otherProject.embeddings || otherProject.embeddings.length === 0) && 
+          (!otherProject.title || !otherProject.problemStatement || !otherProject.objectives)) {
         continue;
       }
       
-      // Calculate similarity
-      const similarity = fileProcessor.calculateCosineSimilarity(
-        project.embeddings,
-        otherProject.embeddings
+      // Calculate embedding-based similarity if both have embeddings
+      let embeddingSimilarity = 0;
+      if (project.embeddings && project.embeddings.length > 0 && 
+          otherProject.embeddings && otherProject.embeddings.length > 0) {
+        embeddingSimilarity = fileProcessor.calculateCosineSimilarity(
+          project.embeddings,
+          otherProject.embeddings
+        );
+      }
+      
+      // Calculate weighted metadata-based similarity as an alternative approach
+      const metadataSimilarity = fileProcessor.calculateWeightedSimilarity(
+        {
+          title: project.title,
+          problemStatement: project.problemStatement,
+          objectives: project.objectives,
+          department: project.department
+        },
+        {
+          title: otherProject.title,
+          problemStatement: otherProject.problemStatement,
+          objectives: otherProject.objectives,
+          department: otherProject.department
+        }
       );
+      
+      // Use the higher of the two similarity scores
+      const similarity = Math.max(embeddingSimilarity, metadataSimilarity);
       
       // Convert to percentage
       const similarityPercentage = Math.round(similarity * 100);
@@ -298,19 +382,45 @@ exports.analyzeSimilarity = async (req, res, next) => {
       
       // Only store results with similarity above threshold (e.g., 20%)
       if (similarityPercentage >= 20) {
-        // Determine similar sections (simplified approach)
+        // Determine similar sections based on component similarities
         const similarSections = [];
         
-        if (similarity > 0.7) {
-          similarSections.push('Problem Statement');
+        // Check title similarity
+        if (project.title && otherProject.title) {
+          const titleSimilarity = fileProcessor.calculateWeightedSimilarity(
+            { title: project.title },
+            { title: otherProject.title },
+            { title: 1.0 } // Only consider title
+          );
+          if (titleSimilarity > 0.6) {
+            similarSections.push('Title');
+          }
         }
         
-        if (similarity > 0.5) {
-          similarSections.push('Objectives');
+        // Check problem statement similarity
+        if (project.problemStatement && otherProject.problemStatement) {
+          const psSimilarity = fileProcessor.calculateWeightedSimilarity(
+            { problemStatement: project.problemStatement },
+            { problemStatement: otherProject.problemStatement },
+            { problemStatement: 1.0 } // Only consider problem statement
+          );
+          if (psSimilarity > 0.5) {
+            similarSections.push('Problem Statement');
+          }
         }
         
-        if (similarity > 0.3) {
-          similarSections.push('Methodology');
+        // Check objectives similarity
+        if (project.objectives && otherProject.objectives &&
+            Array.isArray(project.objectives) && Array.isArray(otherProject.objectives) &&
+            project.objectives.length > 0 && otherProject.objectives.length > 0) {
+          const objSimilarity = fileProcessor.calculateWeightedSimilarity(
+            { objectives: project.objectives },
+            { objectives: otherProject.objectives },
+            { objectives: 1.0 } // Only consider objectives
+          );
+          if (objSimilarity > 0.4) {
+            similarSections.push('Objectives');
+          }
         }
         
         // Create or update similarity result

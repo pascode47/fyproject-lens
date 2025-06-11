@@ -430,19 +430,73 @@ exports.validateMetadata = (metadata) => {
 // --- Embeddings ---
 
 /**
+ * Preprocess text for embedding generation
+ * @param {String} text - Text to preprocess
+ * @returns {String} - Preprocessed text
+ */
+const preprocessTextForEmbedding = (text) => {
+  if (!text) return '';
+  
+  // Convert to lowercase
+  let processed = text.toLowerCase();
+  
+  // Remove extra whitespace
+  processed = processed.replace(/\s+/g, ' ').trim();
+  
+  // Remove special characters but keep important punctuation
+  processed = processed.replace(/[^\w\s.,;:?!-]/g, '');
+  
+  // Remove common academic filler words that don't add meaning
+  const fillerWords = [
+    'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 
+    'has', 'have', 'had', 'be', 'been', 'being', 'in', 'on', 'at', 'to', 
+    'for', 'with', 'by', 'about', 'like', 'through', 'over', 'before', 'after',
+    'this', 'that', 'these', 'those', 'it', 'its', 'it\'s', 'they', 'them', 'their',
+    'we', 'us', 'our', 'i', 'me', 'my', 'you', 'your'
+  ];
+  
+  // Only remove whole words (not parts of words)
+  const words = processed.split(' ');
+  const filteredWords = words.filter(word => !fillerWords.includes(word));
+  
+  // Join back with spaces
+  return filteredWords.join(' ');
+};
+
+/**
  * Generate embeddings using OpenAI based on key project fields.
  * @param {Object} metadata - Object containing extracted metadata. Expected keys: title, problemStatement, objectives.
  * @returns {Promise<Array<Number>>} - Embeddings array, or empty array on failure/missing data.
  */
 exports.generateEmbeddings = async (metadata) => {
   // Construct the text input for embeddings from specific fields
-  const { title, problemStatement, objectives } = metadata;
+  const { title, problemStatement, objectives, department } = metadata;
+  
+  // Create weighted sections with appropriate preprocessing
   let embeddingInput = '';
 
-  if (title) embeddingInput += `Title: ${title}\n`;
-  if (problemStatement) embeddingInput += `Problem Statement: ${problemStatement}\n`;
+  // Title is important - give it more weight by repeating it
+  if (title) {
+    const processedTitle = preprocessTextForEmbedding(title);
+    embeddingInput += `Title: ${processedTitle}\n${processedTitle}\n\n`;
+  }
+  
+  // Problem statement is a core component
+  if (problemStatement) {
+    const processedProblemStatement = preprocessTextForEmbedding(problemStatement);
+    embeddingInput += `Problem Statement: ${processedProblemStatement}\n\n`;
+  }
+  
+  // Objectives are important for determining project similarity
   if (objectives && objectives.length > 0) {
-    embeddingInput += `Objectives:\n${objectives.map(o => `- ${o}`).join('\n')}`;
+    const processedObjectives = objectives.map(obj => preprocessTextForEmbedding(obj));
+    embeddingInput += `Objectives:\n${processedObjectives.map(o => `- ${o}`).join('\n')}\n\n`;
+  }
+  
+  // Department can provide context for domain-specific terminology
+  if (department) {
+    const processedDepartment = preprocessTextForEmbedding(department);
+    embeddingInput += `Department: ${processedDepartment}`;
   }
 
   embeddingInput = embeddingInput.trim();
@@ -550,4 +604,161 @@ exports.calculateCosineSimilarity = (a, b) => {
   // Clamp result between 0 and 1 (due to potential floating point inaccuracies)
   const similarity = dotProduct / (magnitudeA * magnitudeB);
   return Math.max(0, Math.min(1, similarity));
+};
+
+/**
+ * Calculate weighted similarity between projects based on their metadata
+ * This function can be used as an alternative to direct embedding comparison
+ * @param {Object} projectA - First project metadata
+ * @param {Object} projectB - Second project metadata
+ * @param {Object} weights - Optional weights for different components (default weights provided)
+ * @returns {Number} - Weighted similarity score (0-1)
+ */
+exports.calculateWeightedSimilarity = (projectA, projectB, weights = null) => {
+  // Default weights if not provided
+  const defaultWeights = {
+    title: 0.15,
+    problemStatement: 0.40,
+    objectives: 0.35,
+    department: 0.10
+  };
+  
+  // Use provided weights or defaults
+  const finalWeights = weights || defaultWeights;
+  
+  // Ensure weights sum to 1
+  const weightSum = Object.values(finalWeights).reduce((sum, w) => sum + w, 0);
+  if (Math.abs(weightSum - 1) > 0.001) {
+    console.warn(`Weights do not sum to 1 (sum: ${weightSum}). Normalizing weights.`);
+    Object.keys(finalWeights).forEach(key => {
+      finalWeights[key] = finalWeights[key] / weightSum;
+    });
+  }
+  
+  let totalSimilarity = 0;
+  let totalWeightApplied = 0;
+  
+  // Calculate title similarity if both have titles
+  if (projectA.title && projectB.title) {
+    const titleA = preprocessTextForEmbedding(projectA.title);
+    const titleB = preprocessTextForEmbedding(projectB.title);
+    
+    // Simple word overlap for title (can be enhanced with more sophisticated methods)
+    const wordsA = new Set(titleA.split(' ').filter(w => w.length > 2));
+    const wordsB = new Set(titleB.split(' ').filter(w => w.length > 2));
+    
+    const intersection = new Set([...wordsA].filter(x => wordsB.has(x)));
+    const union = new Set([...wordsA, ...wordsB]);
+    
+    const titleSimilarity = union.size > 0 ? intersection.size / union.size : 0;
+    totalSimilarity += titleSimilarity * finalWeights.title;
+    totalWeightApplied += finalWeights.title;
+  }
+  
+  // Calculate problem statement similarity if both have problem statements
+  if (projectA.problemStatement && projectB.problemStatement) {
+    const psA = preprocessTextForEmbedding(projectA.problemStatement);
+    const psB = preprocessTextForEmbedding(projectB.problemStatement);
+    
+    // More sophisticated text similarity for problem statements
+    // Using TF-IDF inspired approach for term importance
+    const wordsA = psA.split(' ').filter(w => w.length > 2);
+    const wordsB = psB.split(' ').filter(w => w.length > 2);
+    
+    // Count word frequencies
+    const freqA = {};
+    const freqB = {};
+    
+    wordsA.forEach(word => {
+      freqA[word] = (freqA[word] || 0) + 1;
+    });
+    
+    wordsB.forEach(word => {
+      freqB[word] = (freqB[word] || 0) + 1;
+    });
+    
+    // Get unique words from both texts
+    const allWords = new Set([...Object.keys(freqA), ...Object.keys(freqB)]);
+    
+    // Calculate dot product and magnitudes
+    let dotProduct = 0;
+    let magnitudeA = 0;
+    let magnitudeB = 0;
+    
+    allWords.forEach(word => {
+      const a = freqA[word] || 0;
+      const b = freqB[word] || 0;
+      
+      dotProduct += a * b;
+      magnitudeA += a * a;
+      magnitudeB += b * b;
+    });
+    
+    // Calculate cosine similarity
+    const psSimilarity = (magnitudeA > 0 && magnitudeB > 0) 
+      ? dotProduct / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
+      : 0;
+    
+    totalSimilarity += psSimilarity * finalWeights.problemStatement;
+    totalWeightApplied += finalWeights.problemStatement;
+  }
+  
+  // Calculate objectives similarity if both have objectives
+  if (projectA.objectives && projectB.objectives && 
+      Array.isArray(projectA.objectives) && Array.isArray(projectB.objectives) &&
+      projectA.objectives.length > 0 && projectB.objectives.length > 0) {
+    
+    // Preprocess all objectives
+    const objsA = projectA.objectives.map(obj => preprocessTextForEmbedding(obj));
+    const objsB = projectB.objectives.map(obj => preprocessTextForEmbedding(obj));
+    
+    // Calculate pairwise similarities between objectives
+    let totalObjSimilarity = 0;
+    
+    // For each objective in A, find the most similar objective in B
+    objsA.forEach(objA => {
+      let maxSimilarity = 0;
+      
+      objsB.forEach(objB => {
+        // Simple word overlap for objectives
+        const wordsA = new Set(objA.split(' ').filter(w => w.length > 2));
+        const wordsB = new Set(objB.split(' ').filter(w => w.length > 2));
+        
+        const intersection = new Set([...wordsA].filter(x => wordsB.has(x)));
+        const union = new Set([...wordsA, ...wordsB]);
+        
+        const similarity = union.size > 0 ? intersection.size / union.size : 0;
+        maxSimilarity = Math.max(maxSimilarity, similarity);
+      });
+      
+      totalObjSimilarity += maxSimilarity;
+    });
+    
+    // Normalize by the number of objectives in A
+    const objSimilarity = objsA.length > 0 ? totalObjSimilarity / objsA.length : 0;
+    
+    totalSimilarity += objSimilarity * finalWeights.objectives;
+    totalWeightApplied += finalWeights.objectives;
+  }
+  
+  // Calculate department similarity (exact match or not)
+  if (projectA.department && projectB.department) {
+    const deptA = projectA.department.toLowerCase().trim();
+    const deptB = projectB.department.toLowerCase().trim();
+    
+    // Exact match gets full similarity, otherwise 0
+    // Could be enhanced with department hierarchies or related fields
+    const deptSimilarity = deptA === deptB ? 1 : 0;
+    
+    totalSimilarity += deptSimilarity * finalWeights.department;
+    totalWeightApplied += finalWeights.department;
+  }
+  
+  // If no weights were applied (no matching fields), return 0
+  if (totalWeightApplied === 0) {
+    return 0;
+  }
+  
+  // Normalize by the total weight applied
+  return totalSimilarity / totalWeightApplied;
 };

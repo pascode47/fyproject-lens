@@ -36,15 +36,9 @@ exports.generateRecommendations = async (projectData, similarProjects) => {
       Academic Year: ${project.academicYear || "Not specified"}
     `).join('\n\n');
     
-    // Create a more detailed and structured prompt
+    // Create a more detailed and structured prompt with improved guidance
     const prompt = `
-      You are an academic project advisor tasked with providing detailed recommendations for a student's project proposal.
-      
-      I'll provide you with:
-      1. The student's project proposal details
-      2. Information about similar existing projects in our database
-      
-      Your task is to perform a DETAILED COMPARISON between the proposal and the similar projects, then provide 4-6 specific, actionable recommendations to help the student improve their proposal.
+      You are an academic project advisor with expertise in providing detailed, actionable recommendations for student project proposals. Your goal is to help students improve their proposals by leveraging insights from similar existing projects.
       
       # STUDENT'S PROPOSAL:
       ${userProject}
@@ -52,23 +46,31 @@ exports.generateRecommendations = async (projectData, similarProjects) => {
       # SIMILAR EXISTING PROJECTS:
       ${similarProjectsText}
       
-      # ANALYSIS INSTRUCTIONS:
-      1. First, identify specific similarities and differences between the proposal and each similar project
-      2. Look for patterns across the similar projects that might indicate common approaches or methodologies in this field
-      3. Identify any potential gaps in the student's proposal compared to the similar projects
-      4. Consider how the student could differentiate their project from the similar ones
+      # ANALYSIS APPROACH:
+      1. SIMILARITIES ANALYSIS: Identify specific content, methodological, and conceptual similarities between the proposal and each similar project
+      2. PATTERNS IDENTIFICATION: Recognize common approaches, methodologies, or technologies across the similar projects
+      3. GAP ANALYSIS: Identify specific elements present in successful similar projects but missing from the student's proposal
+      4. DIFFERENTIATION OPPORTUNITIES: Identify ways the student could make their project more unique or innovative
+      5. RISK ASSESSMENT: Identify potential challenges or pitfalls based on similar projects
       
-      # RECOMMENDATION INSTRUCTIONS:
-      Based on your analysis, provide 4-6 specific, actionable recommendations that:
-      1. Address specific gaps or weaknesses in the problem statement compared to similar projects
-      2. Suggest concrete improvements or additions to the objectives based on what similar projects have done
-      3. Recommend specific approaches, methodologies, or technologies that similar projects have used successfully
-      4. Suggest ways the student can differentiate their project from similar ones
-      5. Identify potential challenges the student might face based on similar projects
+      # RECOMMENDATION GUIDELINES:
+      Based on your analysis, provide 5-7 specific, actionable recommendations that:
+      - Are concrete and implementable (not vague suggestions)
+      - Address specific gaps or weaknesses compared to similar projects
+      - Suggest specific methodologies, technologies, or approaches
+      - Recommend ways to differentiate the project
+      - Identify potential challenges and how to address them
+      - Are tailored to the specific department/field of study
       
-      Format your recommendations as a numbered list. Each recommendation should be specific, actionable, and directly related to the comparison between the proposal and similar projects.
+      # OUTPUT FORMAT:
+      Present your recommendations as a numbered list (1., 2., 3., etc.). Each recommendation should:
+      - Begin with a clear action verb (Consider, Implement, Expand, Include, etc.)
+      - Be 1-3 sentences long
+      - Provide specific details, not generic advice
+      - Reference specific elements from the similar projects when relevant
+      - Be directly applicable to the student's proposal
       
-      IMPORTANT: Your recommendations must be based on the actual content of the proposal and similar projects. Do not make generic recommendations that could apply to any project.
+      IMPORTANT: Your recommendations must be based on the actual content of the proposal and similar projects. Avoid generic advice that could apply to any project. Focus on specific, actionable improvements based on the comparison.
     `;
 
     // Call Ollama API
@@ -120,25 +122,70 @@ exports.generateRecommendations = async (projectData, similarProjects) => {
     
     const content = responseJson.message.content;
     
-    // Attempt to parse numbered list, otherwise return raw content split by newlines
-    let recommendations;
-    if (/\d+\./.test(content)) { // Check if content contains numbered list pattern
-        recommendations = content
-        .split(/\d+\.\s*/) // Split by number, dot, and optional space
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-    } else {
-        // If not a clear numbered list, split by newline and filter empty lines
-        recommendations = content
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+    // Improved parsing of recommendations from LLM response
+    let recommendations = [];
+    
+    // First, try to extract a numbered list using regex
+    const numberedListRegex = /\d+\.\s*([^\d\n]+(?:\n(?!\d+\.).*)*)/g;
+    let match;
+    while ((match = numberedListRegex.exec(content)) !== null) {
+      if (match[1] && match[1].trim().length > 0) {
+        // Clean up the recommendation text
+        const recommendation = match[1]
+          .replace(/\n+/g, ' ')  // Replace newlines with spaces
+          .replace(/\s+/g, ' ')  // Normalize whitespace
+          .trim();
+        
+        recommendations.push(recommendation);
+      }
     }
     
-    if (recommendations.length === 0 && content.length > 0) {
-        // If splitting failed but there's content, return the whole content as a single recommendation
-        console.warn("Could not parse recommendations into a list, returning raw content as one item.");
-        return [content.trim()];
+    // If no numbered list was found, try to extract bullet points
+    if (recommendations.length === 0) {
+      const bulletListRegex = /[-•*]\s*([^-•*\n]+(?:\n(?![-•*]).*)*)/g;
+      while ((match = bulletListRegex.exec(content)) !== null) {
+        if (match[1] && match[1].trim().length > 0) {
+          const recommendation = match[1]
+            .replace(/\n+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          recommendations.push(recommendation);
+        }
+      }
+    }
+    
+    // If neither numbered list nor bullet points were found, split by paragraphs
+    if (recommendations.length === 0) {
+      recommendations = content
+        .split(/\n\s*\n/)  // Split by empty lines
+        .map(para => para.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim())
+        .filter(para => para.length > 10);  // Only include substantial paragraphs
+    }
+    
+    // If all parsing methods failed but there's content, return the whole content as a single recommendation
+    if (recommendations.length === 0 && content.trim().length > 0) {
+      console.warn("Could not parse recommendations into a list, returning raw content as one item.");
+      return [content.trim()];
+    }
+    
+    // Ensure we have a reasonable number of recommendations (3-7)
+    if (recommendations.length > 7) {
+      console.log(`Limiting recommendations from ${recommendations.length} to 7`);
+      recommendations = recommendations.slice(0, 7);
+    } else if (recommendations.length < 3 && content.length > 100) {
+      // If we have too few recommendations but substantial content,
+      // try a simpler approach of splitting by sentences
+      console.log(`Only found ${recommendations.length} recommendations, trying sentence splitting`);
+      const sentences = content
+        .replace(/([.!?])\s+/g, "$1|")  // Mark sentence boundaries
+        .split("|")
+        .map(s => s.trim())
+        .filter(s => s.length > 15 && /[a-zA-Z]/.test(s));  // Only include substantial sentences with letters
+      
+      if (sentences.length >= 3) {
+        recommendations = sentences.slice(0, 5);  // Take up to 5 sentences
+      }
     }
     
     return recommendations;
