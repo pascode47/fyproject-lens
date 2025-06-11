@@ -33,27 +33,7 @@
         <span>Check Proposal</span>
       </button>
       
-      <!-- Search Bar -->
-      <div class="search-container">
-        <mat-form-field appearance="outline">
-          <mat-label>Search projects</mat-label>
-          <input 
-            matInput 
-            [(ngModel)]="searchQuery" 
-            placeholder="Search projects..." 
-            (keyup.enter)="onSearch()"
-          >
-          <button 
-            mat-icon-button 
-            matSuffix 
-            (click)="onSearch()" 
-            [disabled]="!searchQuery.trim()"
-            aria-label="Search"
-          >
-            <mat-icon>search</mat-icon>
-          </button>
-        </mat-form-field>
-      </div>
+      
 
       <!-- Notification Icon -->
       <button mat-icon-button class="action-button">
