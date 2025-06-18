@@ -5,6 +5,33 @@
   font-family: Arial, sans-serif;
 }
 
+/* Back navigation styles */
+.back-navigation {
+  margin-bottom: 15px;
+}
+
+.back-button {
+  background-color: transparent;
+  color: var(--primary-color, #007bff);
+  border: 1px solid var(--primary-color, #007bff);
+  border-radius: 4px;
+  padding: 8px 15px;
+  font-size: 0.9em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.back-button i {
+  margin-right: 5px;
+}
+
+.back-button:hover {
+  background-color: var(--primary-color-light, #e6f2ff);
+  color: var(--primary-color-dark, #0056b3);
+}
+
 .proposal-check-container h2 {
   text-align: center;
   margin-bottom: 10px;

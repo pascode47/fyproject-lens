@@ -1,7 +1,7 @@
-import { Component, ChangeDetectorRef } from '@angular/core'; // ViewChild import removed
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core'; // Added OnInit
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router'; // Added Router and ActivatedRoute
 import { AnalysisService } from '../../shared/services/analysis.service';
 import { ProposalCheckApiResponse, ProposalDetails } from '../../models/proposal-check.model'; // Removed ProposalCheckData as it's not used
 import { SimilarityResult } from '../../models/similarity-result';
@@ -21,7 +21,7 @@ import { ProjectCardComponent } from '../../shared/components/project-card/proje
   templateUrl: './proposal-check.component.html',
   styleUrls: ['./proposal-check.component.css']
 })
-export class ProposalCheckComponent {
+export class ProposalCheckComponent implements OnInit {
   selectedFile: File | null = null;
   isProcessing: boolean = false;
   processingError: string | null = null;
@@ -30,12 +30,38 @@ export class ProposalCheckComponent {
   extractedProposalDetails: ProposalDetails | null = null;
   similarProjectsList: SimilarityResult[] = [];
   recommendationsList: string[] = [];
+  returnUrl: string | null = null;
 
   constructor(
     private analysisService: AnalysisService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     console.log('ProposalCheckComponent initialized');
+    
+    // Get navigation state if available
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation && navigation.extras.state) {
+      this.returnUrl = navigation.extras.state['returnUrl'];
+      console.log('Return URL from navigation state:', this.returnUrl);
+    }
+  }
+  
+  ngOnInit() {
+    // Check if we have a return URL in the history state
+    if (history.state.returnUrl) {
+      this.returnUrl = history.state.returnUrl;
+      console.log('Return URL from history state:', this.returnUrl);
+    }
+  }
+  
+  // Public method to navigate back to the previous page
+  navigateBack(): void {
+    if (this.returnUrl) {
+      console.log('Navigating back to:', this.returnUrl);
+      this.router.navigateByUrl(this.returnUrl);
+    }
   }
 
   onFilesSelected(files: File[]): void { // Method name is onFilesSelected, expects File[]

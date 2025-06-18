@@ -28,7 +28,7 @@
     <!-- Right Side Actions -->
     <div class="header-actions">
       <!-- Quick Action Button -->
-      <button mat-button color="accent" class="action-button check-proposal-btn" [routerLink]="['/check-proposal']">
+      <button mat-button color="accent" class="action-button check-proposal-btn" (click)="navigateToCheckProposal()">
         <mat-icon>find_in_page</mat-icon>
         <span>Check Proposal</span>
       </button>

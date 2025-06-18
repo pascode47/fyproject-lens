@@ -9,7 +9,7 @@
     <div class="error-content">
       <h3>Error</h3>
       <p>{{ error }}</p>
-      <button class="back-button" routerLink="/browse-projects">Back to Projects</button>
+      <button class="back-button" (click)="goBack()">Back</button>
     </div>
   </div>
 
@@ -72,8 +72,8 @@
     </div>
     
     <div class="navigation-buttons">
-      <button class="back-button" routerLink="/browse-projects">
-        <span class="back-icon">←</span> Back to Projects
+      <button class="back-button" (click)="goBack()">
+        <span class="back-icon">←</span> Back
       </button>
     </div>
   </div>
@@ -81,6 +81,6 @@
   <div *ngIf="!project && !isLoading && !error" class="no-project">
     <div class="no-data-icon">📂</div>
     <p>Project data could not be loaded.</p>
-    <button class="back-button" routerLink="/browse-projects">Back to Projects</button>
+    <button class="back-button" (click)="goBack()">Back</button>
   </div>
 </div>

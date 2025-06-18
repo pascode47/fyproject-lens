@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, NavigationExtras } from '@angular/router';
+import { Location } from '@angular/common';
 import { Project } from '../../models/project'; // Import Project model
 
 @Component({
@@ -17,7 +18,7 @@ export class ProjectCardComponent {
   @Input() similarityPercentage?: number; 
   @Input() showSimilarity: boolean = false;
   
-  constructor(private router: Router) {}
+  constructor(private router: Router, private location: Location) {}
   
   logProjectId(): void {
     console.log('Project ID:', this.project._id);
@@ -27,7 +28,16 @@ export class ProjectCardComponent {
   navigateToDetails(): void {
     console.log('Navigating to project details with ID:', this.project._id);
     if (this.project && this.project._id) {
-      this.router.navigate(['/projects', this.project._id]);
+      // Create navigation extras to preserve the navigation state
+      const navigationExtras: NavigationExtras = {
+        state: {
+          // Store the current URL to return to when back button is pressed
+          returnUrl: this.router.url
+        }
+      };
+      
+      // Navigate with state
+      this.router.navigate(['/projects', this.project._id], navigationExtras);
     } else {
       console.error('Cannot navigate: Project ID is missing', this.project);
     }

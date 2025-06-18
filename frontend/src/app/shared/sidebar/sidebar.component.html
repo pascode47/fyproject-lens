@@ -26,7 +26,7 @@
       <mat-nav-list class="sidenav-list admin-nav-list">
         @for (item of adminMenuItems; track item.path) {
           <a mat-list-item 
-             [routerLink]="[item.path]" 
+             (click)="navigateTo(item.path)"
              routerLinkActive="active-link"
              class="nav-item admin-nav-item">
             <mat-icon class="nav-icon">
@@ -53,7 +53,7 @@
     <mat-nav-list class="sidenav-list">
       @for (item of menuItems; track item.path) {
         <a mat-list-item 
-           [routerLink]="[item.path]" 
+           (click)="navigateTo(item.path)"
            routerLinkActive="active-link"
            class="nav-item">
           <mat-icon class="nav-icon">
@@ -87,7 +87,7 @@
         <div class="auth-buttons">
           @for (item of authMenuItems; track item.path) {
             <a mat-stroked-button 
-               [routerLink]="[item.path]" 
+               (click)="navigateTo(item.path)"
                class="auth-button">
               <mat-icon>{{ item.icon === '🔑' ? 'login' : 'person_add' }}</mat-icon>
               <span>{{ item.label }}</span>

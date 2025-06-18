@@ -10,7 +10,7 @@ const path = require('path');
 const { Project } = require('../models');
 const { createObjectCsvWriter } = require('csv-writer');
 
-// Connect to MongoDB
+// Connect to MongoDB using environment variable for URI
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -38,7 +38,7 @@ async function exportProjectMetadata() {
       }
     }
     
-    // Define output file path
+    // Define output file path 
     const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
     const outputPath = path.join(outputDir, `project_metadata_${timestamp}.csv`);
     

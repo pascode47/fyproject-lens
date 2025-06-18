@@ -196,4 +196,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Emit an event to notify the parent component that the drawer is closed
     this.sidebarToggled.emit(false);
   }
+  
+  /**
+   * Navigate to a specific route and close the sidebar
+   * This prevents the default navigation behavior which might cause
+   * unwanted redirects through the default route
+   */
+  navigateTo(path: string): void {
+    // Close the sidebar
+    this.toggleSidebar();
+    
+    // Navigate directly to the path
+    this.router.navigateByUrl(path);
+  }
 }

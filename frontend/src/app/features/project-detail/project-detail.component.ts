@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { CommonModule, Location } from '@angular/common';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { ProjectService } from '../../services/project.service';
 import { SimilarityService } from '../../services/similarity.service';
 import { Project } from '../../models/project';
@@ -18,6 +18,7 @@ export class ProjectDetailComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   projectId: string | null = null;
+  returnUrl: string | null = null;
   
   // Similarity analysis properties
   isAnalyzing = false;
@@ -26,9 +27,18 @@ export class ProjectDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
+    private location: Location,
     private projectService: ProjectService,
     private similarityService: SimilarityService
-  ) {}
+  ) {
+    // Get navigation state if available
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras.state) {
+      this.returnUrl = navigation.extras.state['returnUrl'];
+      console.log('Return URL from navigation state:', this.returnUrl);
+    }
+  }
 
   ngOnInit(): void {
     // Subscribe to route params to handle navigation between different project details
@@ -99,6 +109,21 @@ export class ProjectDetailComponent implements OnInit {
       return `${environment.apiUrl}/projects/${this.projectId}/download`;
     }
     return null;
+  }
+  
+  /**
+   * Navigate back to the previous page
+   * If a returnUrl was provided in the navigation state, use that
+   * Otherwise, use the browser's history
+   */
+  goBack(): void {
+    if (this.returnUrl) {
+      console.log('Navigating to return URL:', this.returnUrl);
+      this.router.navigateByUrl(this.returnUrl);
+    } else {
+      console.log('Using browser history to go back');
+      this.location.back();
+    }
   }
   
   /**

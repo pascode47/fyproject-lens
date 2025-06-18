@@ -1,4 +1,11 @@
 <div class="proposal-check-container">
+  <!-- Back button to return to previous page if returnUrl is available -->
+  <div class="back-navigation" *ngIf="returnUrl">
+    <button class="back-button" (click)="navigateBack()">
+      <i class="bi bi-arrow-left"></i> Back to previous page
+    </button>
+  </div>
+
   <h2>Check Proposal Similarity & Get Recommendations</h2>
   <p>Upload your proposal or concept note (.docx or .pdf) to see how it compares to existing projects and receive feedback.</p>
 

@@ -51,5 +51,8 @@ export const routes: Routes = [
   },
   
   // Default route
-  { path: '', redirectTo: '/home', pathMatch: 'full' }
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
+  
+  // Catch-all route for handling direct URL access
+  { path: '**', redirectTo: '/home' }
 ];

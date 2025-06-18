@@ -222,6 +222,19 @@ export class HeaderComponent implements OnInit {
     }
   }
   
+  // Navigate to check proposal page with skipLocationChange to prevent adding to history
+  navigateToCheckProposal() {
+    // Store the current URL to return to when back button is pressed
+    const currentUrl = this.router.url;
+    console.log('Navigating to check-proposal from:', currentUrl);
+    
+    // Navigate directly to check-proposal without adding to browser history
+    this.router.navigateByUrl('/check-proposal', { 
+      skipLocationChange: false,
+      state: { returnUrl: currentUrl }
+    });
+  }
+  
   // Update active tab based on current route
   updateActiveTab() {
     const currentUrl = this.router.url;
