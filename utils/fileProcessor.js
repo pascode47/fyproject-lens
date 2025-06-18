@@ -9,11 +9,15 @@ const { Poppler } = require('node-poppler'); // Using node-poppler
 const os = require('os'); // For temporary directory
 const { v4: uuidv4 } = require('uuid'); // For unique filenames
 
-// Initialize API client (Configured for Local Ollama)
-const ollama = new OpenAI({
-  apiKey: 'ollama', // Placeholder API key - Ollama ignores it but SDK might require it
-  baseURL: process.env.OLLAMA_BASE_URL // Use Ollama base URL from .env
+// DeepSeek LLM Client (for metadata extraction)
+const deepseek = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: process.env.DEEPSEEK_BASE_URL
 });
+
+// Nomic Embedding Config
+const NOMIC_API_KEY = process.env.NOMIC_API_KEY;
+const NOMIC_EMBEDDING_MODEL = 'nomic-embed-text-v1.5'; // Explicit version
 
 /**
  * Extract text from the first ~10 pages of a DOCX file (approximate).
@@ -334,63 +338,21 @@ Return JSON with:
 
 IGNORE all other information. If a value for a field cannot be found in the text, use null for string fields or an empty array for array fields. DO NOT use placeholder values like 'Not specified' or 'Your Name'. Respond ONLY with the JSON object.`;
   
-  const ollamaBaseUrl = process.env.OLLAMA_BASE_URL;
-  const chatModelToUse = process.env.OLLAMA_CHAT_MODEL || 'llama3'; // Use specific chat model
-    
   try {
-    console.log(`--- Attempting Ollama AI metadata extraction with model: ${chatModelToUse} using direct fetch to ${ollamaBaseUrl}/api/chat ---`);
-    const fetchResponse = await fetch(`${ollamaBaseUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: chatModelToUse, // Use chat model
-        messages: [{ role: 'user', content: prompt }],
-        format: "json", // Request JSON output from Ollama
-        stream: false,
-        options: {
-          temperature: 0.2,
-        }
-      }),
+    console.log(`Using DeepSeek (${process.env.DEEPSEEK_BASE_URL}) for metadata extraction`);
+    const response = await deepseek.chat.completions.create({
+      model: 'deepseek-chat',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: "json_object" },
+      temperature: 0.2
     });
 
-    if (!fetchResponse.ok) {
-      const errorBody = await fetchResponse.text();
-      console.error(`Ollama API error for AI metadata! Status: ${fetchResponse.status}, Body: ${errorBody}`);
-      throw new Error(`Ollama API request for AI metadata failed with status ${fetchResponse.status}`);
-    }
-
-    const responseJson = await fetchResponse.json();
-    
-    if (!responseJson || !responseJson.message || !responseJson.message.content) {
-      console.error('Unexpected or empty response structure from Ollama /api/chat for metadata.');
-      return {};
-    }
-    
-    const content = responseJson.message.content;
-    console.log("--- Raw AI Response from Ollama for metadata: ---", content);
-
-    // Parse the JSON response
-    try {
-      // Attempt to clean potential markdown ```json ... ``` markers
-      const cleanedContent = content.replace(/^```json\s*|```$/g, '').trim();
-      const extractedInfo = JSON.parse(cleanedContent);
-      console.log("--- Parsed AI extraction results: ---", extractedInfo);
-      // Basic validation (ensure it's an object)
-      if (typeof extractedInfo === 'object' && extractedInfo !== null) {
-        return extractedInfo;
-      } else {
-        console.error('AI response was not a valid JSON object:', cleanedContent);
-        return {}; // Return empty object on invalid structure
-      }
-    } catch (parseError) {
-      console.error('Error parsing Ollama JSON response for metadata:', parseError, 'Raw content:', content);
-      return {}; // Return empty object on parsing failure
-    }
+    // Process response
+    const content = response.choices[0]?.message?.content;
+    return JSON.parse(content);
   } catch (error) {
-    console.error('Error calling Ollama API for metadata extraction:', error);
-    return {}; // Return empty object on API call failure
+    console.error('DeepSeek metadata extraction failed:', error);
+    return {};
   }
 };
 
@@ -513,69 +475,30 @@ exports.generateEmbeddings = async (metadata) => {
   console.log("Constructed embeddingInput (first 500 chars):", embeddingInput.substring(0, 500));
   console.log("Length of embeddingInput:", embeddingInput.length);
 
-  // --- START TEMPORARY FETCH TEST ---
+  // --- START NOMIC API FETCH ---
   try {
-    const embeddingModelToUse = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text'; // Use specific embedding model
-    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL;
-
-    if (!ollamaBaseUrl) {
-      console.error('OLLAMA_BASE_URL is not set in .env file. Cannot generate embeddings.');
-      throw new Error('Ollama base URL not configured.');
-    }
-    
-    console.log(`[DIRECT FETCH TEST] Attempting Ollama embedding with model: ${embeddingModelToUse} at ${ollamaBaseUrl}/api/embeddings`);
-
-    const fetchResponse = await fetch(`${ollamaBaseUrl}/api/embeddings`, {
+    const response = await fetch('https://api-atlas.nomic.ai/v1/embedding/text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${NOMIC_API_KEY}`
       },
       body: JSON.stringify({
-        model: embeddingModelToUse, // Use embedding model
-        prompt: embeddingInput, // Using 'prompt' as per Ollama API docs for /api/embeddings
+        model: NOMIC_EMBEDDING_MODEL,
+        texts: [embeddingInput],
+        task_type: 'search_document' // Best for project documents
       }),
     });
 
-    if (!fetchResponse.ok) {
-      const errorBody = await fetchResponse.text();
-      console.error(`[DIRECT FETCH TEST] Ollama API error! Status: ${fetchResponse.status}, Body: ${errorBody}`);
-      throw new Error(`Ollama API request failed with status ${fetchResponse.status}`);
-    }
-
-    const responseJson = await fetchResponse.json();
-    // console.log("[DIRECT FETCH TEST] Raw JSON response from Ollama embeddings endpoint:", JSON.stringify(responseJson, null, 2)); // Commented out for brevity
-
-    let embeddingVector = null;
-    if (responseJson && responseJson.embedding && Array.isArray(responseJson.embedding)) {
-      embeddingVector = responseJson.embedding;
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
-    if (embeddingVector && embeddingVector.length > 0) {
-      const allZeros = embeddingVector.every(element => element === 0);
-      if (allZeros) {
-        console.warn(`[DIRECT FETCH TEST] Warning: Ollama returned an embedding vector of all zeros for model ${embeddingModelToUse} and input: ${embeddingInput.substring(0,100)}...`);
-      } else {
-        console.log(`[DIRECT FETCH TEST] Successfully received non-zero embeddings. First 5 values: ${embeddingVector.slice(0,5).join(', ')}`);
-      }
-      // If direct fetch works, we return this. If not, the original catch block will handle it.
-      // This effectively bypasses the ollama SDK client for this test.
-      return embeddingVector; 
-    } else {
-       console.error('[DIRECT FETCH TEST] Unexpected or empty response structure from Ollama embeddings. Full response logged above.');
-       throw new Error('Failed to parse valid embeddings from Ollama response using direct fetch.');
-    }
-
+    const { embeddings } = await response.json();
+    return embeddings?.[0] || []; // Return first embedding or empty array
   } catch (error) {
-    console.error(`[DIRECT FETCH TEST] Error generating embeddings with model ${process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text'}:`, error.message);
-    // Log the full error object if it has more details
-    if (error.response && error.response.data) { // This was for the SDK, might not apply to fetch
-      console.error("[DIRECT FETCH TEST] Ollama error response data (if available from SDK error structure):", JSON.stringify(error.response.data, null, 2));
-    }
-    // We throw the error to indicate failure of this test, allowing the script to log it.
-    // The main script's error handling will catch this.
-    throw new Error(`[DIRECT FETCH TEST] Failed to generate embeddings: ${error.message}`);
+    console.error('Nomic embedding failed:', error.message);
+    return [];
   }
-  // --- END TEMPORARY FETCH TEST ---
+  // --- END NOMIC API FETCH ---
 };
 
 /**
