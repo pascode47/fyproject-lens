@@ -37,7 +37,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.isUserLoggedIn = this.authService.isAuthenticated();
     });
     
-    // Listen for route changes to detect admin routes and project detail routes
+    // Listen for route changes to manage drawer state
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
@@ -47,13 +47,14 @@ export class AppComponent implements OnInit, OnDestroy {
       if (currentUrl.includes('/admin')) {
         // Open the drawer when navigating to admin routes
         this.drawerService.setDrawerOpen(true);
-      }
-      
-      // Log navigation to project detail pages for debugging
-      if (currentUrl.includes('/projects/')) {
+      } else if (currentUrl.includes('/projects/')) {
         console.log('Navigated to project detail page:', currentUrl);
         // Make sure the drawer is closed for project detail pages
         this.drawerService.setDrawerOpen(false);
+      } else {
+        // Close the drawer by default for other routes to prevent UI overlap
+        this.drawerService.setDrawerOpen(false);
+        console.log('Drawer closed for route:', currentUrl);
       }
     });
   }

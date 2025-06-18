@@ -206,6 +206,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Close the sidebar
     this.toggleSidebar();
     
+    console.log('Attempting navigation to:', path);
+    
+    // Check if the path requires authentication
+    const targetMenuItem = this.allMenuItems.find(item => item.path === path);
+    if (targetMenuItem && targetMenuItem.requiresAuth && !this.authService.isAuthenticated()) {
+      console.log('Navigation blocked: User not authenticated for protected route:', path);
+      this.router.navigateByUrl('/auth/login');
+      return;
+    }
+    
     // Special handling for check-proposal to preserve navigation state
     if (path === '/check-proposal') {
       // Get the current URL to use as the return URL
@@ -220,7 +230,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.router.navigate(['/check-proposal', returnUrlParam]);
     } else {
       // For other paths, navigate directly
-      this.router.navigateByUrl(path);
+      this.router.navigateByUrl(path).then(success => {
+        console.log('Navigation to', path, 'successful:', success);
+      }).catch(error => {
+        console.error('Navigation to', path, 'failed:', error);
+      });
     }
   }
 }

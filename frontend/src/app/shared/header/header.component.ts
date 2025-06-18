@@ -268,7 +268,11 @@ export class HeaderComponent implements OnInit {
       (item.path === '/home' && currentUrl === '/')
     );
     
-    this.activeTabIndex = index >= 0 ? index : 0;
+    // Only update the active tab if a match is found; otherwise, keep the current tab or set to a neutral state
+    if (index >= 0) {
+      this.activeTabIndex = index;
+    }
+    // If no match is found, do not default to 0 (Home), keep the current active tab
   }
 
   private updatePageTitle() {
