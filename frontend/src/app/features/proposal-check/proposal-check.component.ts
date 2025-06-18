@@ -31,6 +31,8 @@ export class ProposalCheckComponent implements OnInit {
   similarProjectsList: SimilarityResult[] = [];
   recommendationsList: string[] = [];
   returnUrl: string | null = null;
+  cachedAnalysis: any[] = [];
+  showCachedResults: boolean = false;
 
   constructor(
     private analysisService: AnalysisService,
@@ -64,6 +66,8 @@ export class ProposalCheckComponent implements OnInit {
         }
       }
     });
+    // Check for cached analysis results
+    this.loadCachedAnalysis();
   }
   
   // Public method to navigate back to the previous page
@@ -87,7 +91,8 @@ export class ProposalCheckComponent implements OnInit {
     this.extractedProposalDetails = null;
     this.similarProjectsList = [];
     this.recommendationsList = [];
-    this.isProcessing = false; 
+    this.isProcessing = false;
+    this.showCachedResults = false; 
   }
 
   analyzeProposal(): void {
@@ -110,6 +115,7 @@ export class ProposalCheckComponent implements OnInit {
     this.extractedProposalDetails = null;
     this.similarProjectsList = [];
     this.recommendationsList = [];
+    this.showCachedResults = false;
     console.log('State reset before API call.');
 
     const formData = new FormData();
@@ -156,5 +162,43 @@ export class ProposalCheckComponent implements OnInit {
       }
     });
     console.log('Subscription to checkProposalSimilarity initiated.');
+  }
+
+  loadCachedAnalysis(): void {
+    this.analysisService.getUserHistory().subscribe({
+      next: (history) => {
+        console.log('Cached analysis history received:', history);
+        this.cachedAnalysis = history.filter(analysis => analysis.analysisType === 'proposal');
+        if (this.cachedAnalysis.length > 0) {
+          this.showCachedResults = true;
+          // Display the most recent analysis by default
+          const latestAnalysis = this.cachedAnalysis[0];
+          this.analysisResult = {
+            success: true,
+            message: 'Cached analysis result',
+            data: {
+              proposalDetails: latestAnalysis.proposalDetails,
+              similarProjects: latestAnalysis.similarProjects,
+              recommendations: latestAnalysis.recommendations
+            }
+          };
+          this.extractedProposalDetails = latestAnalysis.proposalDetails;
+          this.similarProjectsList = latestAnalysis.similarProjects;
+          this.recommendationsList = latestAnalysis.recommendations;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error fetching cached analysis history:', err);
+        this.cachedAnalysis = [];
+        this.showCachedResults = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  reAnalyzeProposal(): void {
+    this.showCachedResults = false;
+    this.analyzeProposal();
   }
 }

@@ -1,9 +1,9 @@
-const { OpenAI } = require('openai'); // OpenAI class is used for Ollama client as well
+const { OpenAI } = require('openai');
 
-// Initialize Ollama client
-const ollama = new OpenAI({
-  apiKey: process.env.OLLAMA_API_KEY || 'ollama', // Ollama might ignore API key, but SDK might require it. Use a placeholder.
-  baseURL: process.env.OLLAMA_BASE_URL // Ensure OLLAMA_BASE_URL is in your .env file
+// Initialize DeepSeek client for recommendations
+const deepseek = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: process.env.DEEPSEEK_BASE_URL
 });
 
 /**
@@ -74,54 +74,30 @@ exports.generateRecommendations = async (projectData, similarProjects) => {
       IMPORTANT: Your recommendations must be based on the actual content of the proposal and similar projects. Avoid generic advice that could apply to any project. Focus on specific, actionable improvements based on the comparison. NEVER leave references to projects incomplete - always specify exactly what aspects of similar projects should be referenced.
     `;
 
-    // Call Ollama API
-    if (!process.env.OLLAMA_BASE_URL) {
-      console.error('OLLAMA_BASE_URL not set in .env. Cannot generate recommendations with Ollama.');
-      console.warn('Returning fallback recommendations due to missing Ollama configuration.');
+    // Call DeepSeek API
+    if (!process.env.DEEPSEEK_BASE_URL || !process.env.DEEPSEEK_API_KEY) {
+      console.error('DEEPSEEK_BASE_URL or DEEPSEEK_API_KEY not set in .env. Cannot generate recommendations with DeepSeek.');
+      console.warn('Returning fallback recommendations due to missing DeepSeek configuration.');
       return generateFallbackRecommendations(projectData, similarProjects);
     }
-    if (!process.env.OLLAMA_MODEL) {
-      console.warn('OLLAMA_MODEL not set in .env. Defaulting to "llama3" for recommendations.');
-    }
 
-    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL;
-    const chatModelToUse = process.env.OLLAMA_CHAT_MODEL || 'llama3'; // Use specific chat model
+    const chatModelToUse = 'deepseek-chat'; // Use DeepSeek chat model
 
-    console.log(`Attempting Ollama recommendation generation with model: ${chatModelToUse} using direct fetch to ${ollamaBaseUrl}/api/chat`);
+    console.log(`Attempting DeepSeek recommendation generation with model: ${chatModelToUse}`);
 
-    const fetchResponse = await fetch(`${ollamaBaseUrl}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: chatModelToUse, // Use chat model
-        messages: [{ role: 'user', content: prompt }],
-        stream: false, // Important: Ollama's /api/chat expects this for non-streaming
-        options: { // Ollama specific options can go here
-          temperature: 0.5,
-          // max_tokens is not a direct parameter for Ollama's /api/chat in the same way,
-          // context window and model limits apply.
-          // num_predict could be an equivalent if needed, but often not required for short completions.
-        }
-      }),
+    const response = await deepseek.chat.completions.create({
+      model: chatModelToUse,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.5,
+      stream: false
     });
 
-    if (!fetchResponse.ok) {
-      const errorBody = await fetchResponse.text();
-      console.error(`Ollama API error for chat! Status: ${fetchResponse.status}, Body: ${errorBody}`);
-      throw new Error(`Ollama API request for chat failed with status ${fetchResponse.status}`);
-    }
-
-    const responseJson = await fetchResponse.json();
-    // console.log("Raw JSON response from Ollama /api/chat endpoint:", JSON.stringify(responseJson, null, 2));
-
-    if (!responseJson || !responseJson.message || !responseJson.message.content) {
-      console.error('Unexpected or empty response structure from Ollama /api/chat. Full response logged above if enabled.');
-      throw new Error('Failed to parse valid message content from Ollama chat response.');
+    if (!response || !response.choices || response.choices.length === 0 || !response.choices[0].message || !response.choices[0].message.content) {
+      console.error('Unexpected or empty response structure from DeepSeek API.');
+      throw new Error('Failed to parse valid message content from DeepSeek response.');
     }
     
-    const content = responseJson.message.content;
+    const content = response.choices[0].message.content;
     
     // Improved parsing of recommendations from LLM response
     let recommendations = [];
@@ -330,8 +306,8 @@ exports.generateRecommendations = async (projectData, similarProjects) => {
     return recommendations;
 
   } catch (error) {
-    console.error('Error generating recommendations with Ollama:', error.message);
-    console.warn('Returning fallback recommendations due to Ollama error.');
+    console.error('Error generating recommendations with DeepSeek:', error.message);
+    console.warn('Returning fallback recommendations due to DeepSeek error.');
     return generateFallbackRecommendations(projectData, similarProjects);
   }
 };
