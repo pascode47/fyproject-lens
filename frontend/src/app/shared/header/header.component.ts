@@ -1,5 +1,5 @@
 // header.component.ts
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -36,7 +36,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit {
-  isMobileMenuOpen = false;
+  @Input() isDrawerOpen = false;
   isUserMenuOpen = false;
   currentPageTitle = 'Dashboard';
   activeTabIndex = 0;
@@ -191,19 +191,22 @@ export class HeaderComponent implements OnInit {
   }
 
   toggleMobileMenu() {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
-    if (this.isMobileMenuOpen) {
-      this.isUserMenuOpen = false;
-    }
-    
     // Emit an event to toggle the drawer
     this.toggleDrawer.emit();
+    
+    // The isDrawerOpen property will be updated by the parent component
+    if (this.isDrawerOpen) {
+      this.isUserMenuOpen = false;
+    }
   }
 
   toggleUserMenu() {
     this.isUserMenuOpen = !this.isUserMenuOpen;
     if (this.isUserMenuOpen) {
-      this.isMobileMenuOpen = false;
+      // Close the drawer if the user menu is opened
+      if (this.isDrawerOpen) {
+        this.toggleDrawer.emit();
+      }
     }
   }
 
@@ -222,17 +225,18 @@ export class HeaderComponent implements OnInit {
     }
   }
   
-  // Navigate to check proposal page with skipLocationChange to prevent adding to history
+  // Navigate to check proposal page with returnUrl parameter
   navigateToCheckProposal() {
-    // Store the current URL to return to when back button is pressed
+    // Get the current URL to use as the return URL
     const currentUrl = this.router.url;
-    console.log('Navigating to check-proposal from:', currentUrl);
     
-    // Navigate directly to check-proposal without adding to browser history
-    this.router.navigateByUrl('/check-proposal', { 
-      skipLocationChange: false,
-      state: { returnUrl: currentUrl }
-    });
+    // Remove the leading slash if present
+    const returnUrlParam = currentUrl.startsWith('/') ? currentUrl.substring(1) : currentUrl;
+    
+    console.log('Navigating to check-proposal with returnUrl:', returnUrlParam);
+    
+    // Navigate to the check-proposal route with the returnUrl parameter
+    this.router.navigate(['/check-proposal', returnUrlParam]);
   }
   
   // Update active tab based on current route
@@ -298,5 +302,13 @@ export class HeaderComponent implements OnInit {
   // Helper method to check if current page is a project detail page
   isProjectDetailPage(): boolean {
     return this.router.url.includes('/projects/');
+  }
+  
+  // Helper method to handle mobile menu item click
+  handleMobileMenuItemClick(path: string): void {
+    if (path === '/check-proposal') {
+      this.navigateToCheckProposal();
+    }
+    this.toggleMobileMenu();
   }
 }

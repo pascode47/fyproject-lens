@@ -1,9 +1,9 @@
 <!-- header.component.html -->
 <mat-toolbar color="primary" class="header">
   <div class="header-content">
-    <!-- Mobile Menu Toggle (visible only on mobile) -->
-    <button mat-icon-button class="mobile-toggle" (click)="toggleMobileMenu()">
-      <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    <!-- Menu Toggle Button (visible on all viewports) -->
+    <button mat-icon-button class="menu-toggle" (click)="toggleMobileMenu()">
+      <mat-icon>{{ isDrawerOpen ? 'close' : 'menu' }}</mat-icon>
     </button>
 
     <!-- Logo/Brand -->
@@ -81,16 +81,16 @@
 </mat-toolbar>
 
 <!-- Mobile Menu (visible only when toggled) -->
-@if (isMobileMenuOpen) {
+@if (isDrawerOpen) {
   <div class="mobile-menu mat-elevation-z2">
     @for (item of menuItems; track item.path) {
       <a 
         mat-button
-        [routerLink]="[item.path]"
+        [routerLink]="item.path === '/check-proposal' ? [] : [item.path]"
         [routerLinkActive]="'active-link'"
         [routerLinkActiveOptions]="{exact: item.path === '/home'}"
         class="mobile-link"
-        (click)="toggleMobileMenu()">
+        (click)="handleMobileMenuItemClick(item.path)">
         <mat-icon>
           {{ 
             item.icon === '🏠' ? 'home' : 

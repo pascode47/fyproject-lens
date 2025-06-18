@@ -64,9 +64,9 @@
   white-space: nowrap;
 }
 
-/* Mobile Toggle Button */
-.mobile-toggle {
-  display: none;
+/* Menu Toggle Button */
+.menu-toggle {
+  display: block;
   margin-right: 1rem;
 }
 
@@ -187,11 +187,18 @@
   }
 }
 
-@media (max-width: 992px) {
-  .mobile-toggle {
-    display: block;
+@media (min-width: 993px) {
+  /* For desktop viewports, adjust layout to accommodate both hamburger and tabs */
+  .nav-tabs-container {
+    margin-left: 20px;
   }
   
+  .brand {
+    margin-left: 10px;
+  }
+}
+
+@media (max-width: 992px) {
   .nav-tabs-container {
     display: none;
   }

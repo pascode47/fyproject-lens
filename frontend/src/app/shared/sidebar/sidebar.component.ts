@@ -206,7 +206,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Close the sidebar
     this.toggleSidebar();
     
-    // Navigate directly to the path
-    this.router.navigateByUrl(path);
+    // Special handling for check-proposal to preserve navigation state
+    if (path === '/check-proposal') {
+      // Get the current URL to use as the return URL
+      const currentUrl = this.router.url;
+      
+      // Remove the leading slash if present
+      const returnUrlParam = currentUrl.startsWith('/') ? currentUrl.substring(1) : currentUrl;
+      
+      console.log('Navigating to check-proposal from sidebar with returnUrl:', returnUrlParam);
+      
+      // Navigate to the check-proposal route with the returnUrl parameter
+      this.router.navigate(['/check-proposal', returnUrlParam]);
+    } else {
+      // For other paths, navigate directly
+      this.router.navigateByUrl(path);
+    }
   }
 }

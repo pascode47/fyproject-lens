@@ -26,6 +26,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/proposal-check/proposal-check.component').then(m => m.ProposalCheckComponent),
     canActivate: [AuthGuard] 
   },
+  // Add a new route for check-proposal with a returnUrl parameter
+  { 
+    path: 'check-proposal/:returnUrl', 
+    loadComponent: () => import('./features/proposal-check/proposal-check.component').then(m => m.ProposalCheckComponent),
+    canActivate: [AuthGuard] 
+  },
   { path: 'project/similarity/:id', component: SimilarityResultsComponent, canActivate: [AuthGuard] },
   { 
     path: 'projects/:id', 

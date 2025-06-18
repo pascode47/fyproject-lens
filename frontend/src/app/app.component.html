@@ -1,4 +1,4 @@
-<app-header (toggleDrawer)="toggleDrawer()"></app-header>
+<app-header [isDrawerOpen]="isDrawerOpen" (toggleDrawer)="toggleDrawer()"></app-header>
 <div class="page-content-wrapper">
   <app-sidebar 
     [isDrawerOpen]="isDrawerOpen" 

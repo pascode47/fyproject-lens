@@ -49,11 +49,21 @@ export class ProposalCheckComponent implements OnInit {
   }
   
   ngOnInit() {
-    // Check if we have a return URL in the history state
-    if (history.state.returnUrl) {
-      this.returnUrl = history.state.returnUrl;
-      console.log('Return URL from history state:', this.returnUrl);
-    }
+    // Check if we have a returnUrl parameter in the route
+    this.route.paramMap.subscribe(params => {
+      const returnUrlParam = params.get('returnUrl');
+      if (returnUrlParam) {
+        // Add a leading slash if not present
+        this.returnUrl = returnUrlParam.startsWith('/') ? returnUrlParam : '/' + returnUrlParam;
+        console.log('Return URL from route parameter:', this.returnUrl);
+      } else {
+        // Check if we have a return URL in the history state as fallback
+        if (history.state.returnUrl) {
+          this.returnUrl = history.state.returnUrl;
+          console.log('Return URL from history state:', this.returnUrl);
+        }
+      }
+    });
   }
   
   // Public method to navigate back to the previous page

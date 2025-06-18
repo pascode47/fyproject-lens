@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { User } from '../../models/user';
+import { Programme } from '../../models/programme';
 import { Analysis } from '../../models/analysis';
 
 @Component({
@@ -14,6 +15,7 @@ import { Analysis } from '../../models/analysis';
 })
 export class ProfileComponent implements OnInit {
   user: User | null = null;
+  programmeName: string = '';
   analyses: Analysis[] = [];
   isLoading: boolean = true;
   error: string | null = null;
@@ -40,7 +42,43 @@ export class ProfileComponent implements OnInit {
     this.user = this.authService.getCurrentUser();
     if (!this.user) {
       this.error = 'User not authenticated';
+      return;
     }
+    this.setProgrammeName();
+  }
+  
+  setProgrammeName(): void {
+    if (this.user && typeof this.user.programme === 'string') {
+      this.authService.getProgrammes().subscribe({
+        next: (programmes: Programme[]) => {
+          console.log('Programmes fetched from API:', programmes);
+          const programme = programmes.find(p => p.id === this.user!.programme);
+          if (programme) {
+            this.programmeName = programme.fullName;
+          } else {
+            this.programmeName = this.getHardcodedProgrammeName(this.user!.programme as string);
+          }
+        },
+        error: (err) => {
+          console.error('Error fetching programmes:', err);
+          this.programmeName = this.getHardcodedProgrammeName(this.user!.programme as string);
+        }
+      });
+    } else if (this.user && this.user.programme && typeof this.user.programme !== 'string') {
+      this.programmeName = (this.user.programme as Programme).fullName;
+    }
+  }
+  
+  getHardcodedProgrammeName(programmeId: string): string {
+    const programmeMap: { [key: string]: string } = {
+      '682f00b4a04e5b8d9bedb872': 'Bachelor of Science in Information Systems',
+      '682f00b4a04e5b8d9bedb873': 'Bachelor of Science in Software Engineering',
+      '682f00b4a04e5b8d9bedb874': 'Bachelor of Science in Information Technology',
+      '682f00b4a04e5b8d9bedb875': 'Bachelor of Science in Network Security',
+      '682f00b4a04e5b8d9bedb876': 'Bachelor of Science in Computer Engineering',
+      '682f00b4a04e5b8d9bedb877': 'Bachelor of Science in Electrical Engineering'
+    };
+    return programmeMap[programmeId] || `Unknown Programme (${programmeId})`;
   }
   
   loadAnalysisHistory(): void {
