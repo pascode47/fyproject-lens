@@ -19,7 +19,7 @@ services:
     ports:
       - "3000:3000" # Expose backend port
     environment:
-      MONGODB_URI: mongodb://mongodb:27017/fyprojectlensdb # Connect to mongodb service on the docker network
+      MONGODB_URI: mongodb://mongodb:27017/fyprojectlens # Connect to mongodb service on the docker network
       PORT: 3000
       # Add other necessary environment variables here (e.g., JWT_SECRET)
       # OPENAI_API_KEY will be loaded from .env file
